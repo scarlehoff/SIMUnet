@@ -22,18 +22,18 @@ class SimufitConfig(SIMUConfig, N3FitConfig):
     def produce_simu_layer(self, simu_parameters=None, freeze_pdf=False):
         """
         Parses the simu_parameters dictionary and
-        generates the simunet layer that will be applied to all obserables.
+        generates a function that produces 
+        the simunet layer that will be applied to all obserables.
         """
         if simu_parameters is None:
             return None
 
         from simunet.simufit.combine_cfac import CombineCfacLayer
 
-        lay = CombineCfacLayer(simu_parameters)
+        lay = lambda simpar: CombineCfacLayer(simpar)
 
         # Update the register
         simufit._REGISTRY["freeze"] = freeze_pdf
-        simufit._REGISTRY["layer"] = lay
 
         return lay
 

@@ -153,6 +153,10 @@ class SIMUCoreConfig(CoreConfig):
             return simu_parameters_linear_combinations
         return []
 
+    def load_default_data_grouping(self, spec):
+        """Load the default grouping of data"""
+        return "ALL"
+
     def produce_bsm_names_to_latex(self, simu_parameters=None):
         if simu_parameters is None:
             return None
