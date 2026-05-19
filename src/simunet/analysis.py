@@ -264,6 +264,8 @@ def simu_fac_to_popxf(data, dataset_inputs_covariance_matrix, simunet_one_or_mor
 
         written.append(dataset_name)
 
-    print(f"Written popxf and pdfxf files for datasets: {', '.join(written)}")
+    print(
+        f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {likelihood_files.resolve()}"
+    )
 
     return

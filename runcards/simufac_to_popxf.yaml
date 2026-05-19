@@ -1,0 +1,26 @@
+meta:
+  title: Contaminated
+  keywords: [example]
+  author: Ella Cole
+
+pdf:
+  id: CT18NNLO
+  label: CT18NNLO
+
+theoryid: 40000000
+
+use_cuts: internal
+use_pdferr: True
+
+dataset_inputs:
+  - {dataset: ATLAS_Z0_7TEV_49FB_HIMASS, cfac: ["QCD"], variant: "legacy", simu_fac: EFT_LO}
+# - {dataset: ATLAS_TTBAR_13TEV_TOT_X-SEC, cfac: ["QCD"], variant: "legacy", simu_fac: EFT_LO}
+# - {dataset: ATLAS_WPWM_13TEV_HMT_DIF-LEP-PM, cfac: ['EWK'], new_commondata: True, simu_fac: "EFT_LO",use_fixed_predictions: True}
+
+template_text: |
+  {@ with dataset_inputs @}
+  {@simu_fac_to_popxf@}
+  {@ endwith @}
+
+actions_:
+  - report(main=true)
