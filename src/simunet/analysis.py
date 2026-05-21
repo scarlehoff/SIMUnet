@@ -94,7 +94,9 @@ def plot_data_theory_contaminated(simunet_one_or_more_results, commondata, cuts)
 
 
 @figuregen
-def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
+def plot_nd_bsm_facs_fits(
+    fits, bsm_names_to_latex, posterior_plots_settings, contamination_data=None
+):
     """
     Compare histograms of BSM factors between different fits in SIMUnet.
 
@@ -119,7 +121,19 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
     rangex = posterior_plots_settings.get("rangex", None)
     rangey = posterior_plots_settings.get("rangey", None)
     add_bounds = posterior_plots_settings.get("add_bounds", False)
+    exp_val_lines = posterior_plots_settings.get("exp_val_lines", None)
+    # Produce the vertical line values
+    if exp_val_lines == 'SM':
+        exp_val_lines_dict = {op: 0 for op in bsm_names_to_latex.keys()}
 
+    if exp_val_lines == 'CONT':
+        exp_val_lines_dict = {op: 0 for op in bsm_names_to_latex.keys()}
+
+        for item in contamination_data:
+            val = item["value"]
+
+            for op, coeff in item["linear_combination"].items():
+                exp_val_lines_dict[op] += val * coeff
     # extract all operators in the fits
     all_ops = []
     for fit in fits:
@@ -182,4 +196,13 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
                     ax.axvline(mean - std, linestyle='dotted', linewidth=2.5)
                     ax.axvline(mean + std, linestyle='dotted', linewidth=2.5)
                 ax.legend(fontsize=14)
+                if exp_val_lines is not None and exp_val_lines_dict.get(op) is not None:
+                    ax.axvline(
+                        exp_val_lines_dict[op],
+                        color='r',
+                        linestyle='-.',
+                        linewidth=2.5,
+                        label='Expected value',
+                    )
+                    ax.legend(fontsize=14)
         yield fig

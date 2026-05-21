@@ -266,7 +266,7 @@ class SIMUCoreConfig(CoreConfig):
         )
 
     def parse_posterior_plots_settings(self, settings):
-        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds"}
+        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds", "exp_val_lines"}
 
         kdiff = settings.keys() - known_keys
         for k in kdiff:
@@ -280,6 +280,7 @@ class SIMUCoreConfig(CoreConfig):
             "rangex": settings.get("rangex", None),
             "rangey": settings.get("rangey", None),
             "add_bounds": settings.get("add_bounds", False),
+            "exp_val_lines": settings.get("exp_val_lines", None),
         }
         return posterior_plots_settings
 

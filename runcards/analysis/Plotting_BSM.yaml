@@ -78,9 +78,17 @@ simu_parameters:
 posterior_plots_settings:
   same_bins: True
   n_bins: 15
+  exp_val_lines: SM # SM: all zero, CONT: from contamination_parameters values
   # add_bounds: True
   # rangex: [-0.5, 0.6]
   # rangey: [0, 5]
+
+closuretest:
+  contamination_parameters:
+    - name: 'W'
+      value: 0.00008
+      linear_combination:
+          'Olq3': -15.94
 
 template_text: |
 
