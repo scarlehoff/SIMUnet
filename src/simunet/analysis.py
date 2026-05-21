@@ -204,8 +204,10 @@ def simu_fac_to_popxf(data, pdf, dataset_inputs_covariance_matrix, simunet_one_o
 
         if dataset.use_fixed_predictions:
             SM_predictions = np.array(simu.get("SM_fixed", []))[cuts]
+            pdf_name = "fixed_predictions"
         else:
             SM_predictions = simunet_one_or_more_results[1].central_value
+            pdf_name = str(pdf.name)
 
         eft_lo = simu.get("EFT_LO")
 
@@ -227,6 +229,10 @@ def simu_fac_to_popxf(data, pdf, dataset_inputs_covariance_matrix, simunet_one_o
                 "parameters": parameters,
                 "observable_names": obs_names,
                 "reproducibility": {"tools": {"name": "validphys"}},
+                "pdf": pdf_name,
+                "QCD": "",
+                "EWK": "",
+                "SMEFT": "",
             },
             "data": {"observable_central": observable_central},
         }
@@ -254,7 +260,8 @@ def simu_fac_to_popxf(data, pdf, dataset_inputs_covariance_matrix, simunet_one_o
         }
 
         likelihood_files = Path("likelihood_files")
-        pdf_dir = likelihood_files / str(pdf.name)
+
+        pdf_dir = likelihood_files / str(pdf_name)
         pdf_dir.mkdir(parents=True, exist_ok=True)
 
         popxf_path = pdf_dir / f"{dataset_name}.json"
