@@ -181,5 +181,5 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
                     ax.axvline(mean, linestyle='--', linewidth=2.5)
                     ax.axvline(mean - std, linestyle='dotted', linewidth=2.5)
                     ax.axvline(mean + std, linestyle='dotted', linewidth=2.5)
-                ax.legend()
+                ax.legend(fontsize=14)
         yield fig
