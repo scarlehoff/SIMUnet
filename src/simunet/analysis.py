@@ -186,7 +186,7 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
         yield fig
 
 
-def simu_fac_to_popxf(data, dataset_inputs_covariance_matrix, simunet_one_or_more_results):
+def simu_fac_to_popxf(data, pdf, dataset_inputs_covariance_matrix, simunet_one_or_more_results):
     # dataset_inputs_covariance_matrix
     "This function produces a popxf file with the BSM factors for each dataset"
     cov_index = 0
@@ -254,18 +254,17 @@ def simu_fac_to_popxf(data, dataset_inputs_covariance_matrix, simunet_one_or_mor
         }
 
         likelihood_files = Path("likelihood_files")
-        likelihood_files.mkdir(parents=True, exist_ok=True)
+        pdf_dir = likelihood_files / str(pdf.name)
+        pdf_dir.mkdir(parents=True, exist_ok=True)
 
-        popxf_path = likelihood_files / f"{dataset_name}.json"
-        pdfxf_path = likelihood_files / f"{dataset_name}_measurement.json"
+        popxf_path = pdf_dir / f"{dataset_name}.json"
+        pdfxf_path = pdf_dir / f"{dataset_name}_measurement.json"
 
         popxf_path.write_text(json.dumps(popxf_dict, indent=4))
         pdfxf_path.write_text(json.dumps(pdfxf_dict, indent=4))
 
         written.append(dataset_name)
 
-    print(
-        f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {likelihood_files.resolve()}"
-    )
+    print(f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {pdf_dir}.")
 
     return
