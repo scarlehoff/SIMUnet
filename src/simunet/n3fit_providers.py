@@ -3,19 +3,60 @@ Contains the providers that n3fit will use and that we want to override
 """
 
 import numpy as np
+import pandas as pd
 
+from simunet import simufit
+from validphys.coredata import FKTableData
+from validphys.covmats import dataset_t0_predictions as validphys_dataset_t0_predictions
 from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
 from validphys.utils import yaml_safe
-from simunet import simufit
 
 # I'm assuming the information necessary is in the data and needs to be propagated to the fittable dataset
 # minimal changes are necessary if instead we need to propagate this to the fktable instead
 
 
-def fittable_datasets_masked(data, simu_layer=None, simu_parameters=None, analytic_initialisation=False):
+def _fixed_prediction_fkdata(fixed_predictions, hadronic):
+    """Create a 'fake' FKTableData when fixed_predictions are in use."""
+    ndata = len(fixed_predictions)
+    if hadronic:
+        index = pd.MultiIndex.from_product([range(ndata), [0], [0]], names=["data", "x1", "x2"])
+    else:
+        index = pd.MultiIndex.from_product([range(ndata), [0]], names=["data", "x"])
+
+    return FKTableData(
+        hadronic=hadronic,
+        Q0=1.0,
+        ndata=ndata,
+        xgrid=np.ones(1),
+        sigma=pd.DataFrame(0.0, index=index, columns=pd.Index([0], dtype=int)),
+        data_index=pd.Series(range(ndata), index=pd.Index(range(ndata), name="data")),
+        convolution_types=(),
+        metadata={"fixed_predictions": fixed_predictions},
+    )
+
+
+def dataset_t0_predictions(t0dataset, t0set):
+    """Override t0 predictions in the case of fixed_predictions."""
+    if getattr(t0dataset, "use_fixed_predictions", False):
+        values = np.take(t0dataset.fixed_predictions, t0dataset.cuts.load())
+        return values.reshape(-1)
+
+    return validphys_dataset_t0_predictions(t0dataset, t0set)
+
+
+def fittable_datasets_masked(
+    data, simu_layer=None, simu_parameters=None, analytic_initialisation=False
+):
     """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
 
     ret = vanilla_fittable_datasets_masked(data)
+    for dataset, fittable_dataset in zip(data.datasets, ret):
+        if getattr(dataset, "use_fixed_predictions", False):
+            fixed_predictions = np.take(dataset.fixed_predictions, dataset.cuts.load())
+            # In normal NNPDF, whether a dataset is DIS or hadronic is given by the fktable
+            hadronic = not str(dataset.commondata.process_type).startswith("DIS")
+            fittable_dataset.fktables_data = [_fixed_prediction_fkdata(fixed_predictions, hadronic)]
+
     if simu_layer is None:
         return ret
 

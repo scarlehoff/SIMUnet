@@ -6,6 +6,9 @@
 # 2) It should be more amenable to post-processing (and pre-processing!)
 # 3) A short-term solution is to take the model, inject the layer, then let the model continue though
 
+import numpy as np
+
+from n3fit.backends import operations as op
 from n3fit.backends.keras_backend.MetaModel import MetaModel
 from n3fit.layers.observable import Observable
 from n3fit.stopping import Stopping
@@ -32,8 +35,21 @@ def _patch_me_up():
         except AttributeError:  # for positivity/integrability that also pass through here
             self.simunet_layer = None
             self.simunet_cfactors = None
+        self.fixed_predictions = None
+        if fktable_data:
+            metadata = getattr(fktable_data[0], "metadata", {})
+            if isinstance(metadata, dict):
+                self.fixed_predictions = metadata.get("fixed_predictions")
 
     def _call_patch(self, pdf):
+        if self.fixed_predictions is not None:
+            # If fixed preditions are available, then use that
+            # the PDF is multiplied by 0 to "remove it" from the gradient
+            ret = np.asarray(self.fixed_predictions, dtype=float).reshape(1, 1, -1)
+            ret = op.numpy_to_tensor(np.repeat(ret, self.num_replicas, axis=1))
+            zero_pdf = op.expand_dims(op.sum(pdf * 0.0, axis=(-1, -2)), axis=-1)
+            return ret + zero_pdf
+
         observables = original_call(self, pdf)
         # Here do what's now in simunet's model_gen
         # NB: training/validation is now done after the forward pass so the whole cfactor is to be applied
