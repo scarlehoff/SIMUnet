@@ -10,7 +10,7 @@ authors = [
   { name="User", email="user@example.com" },
 ]
 dependencies = [
-    "nnpdf>=4.1.2",
+    "nnpdf>=4.1.5",
     "seaborn>=0.12",
 ]
 requires-python = ">=3.9"
@@ -18,7 +18,7 @@ requires-python = ">=3.9"
 [project.scripts]
 simunet = "simunet.app:main"
 simun3fit = "simunet.simufit.simun3fit_exec:main"
-simunet_generate_thcovmat = "simunet.theory_covmat_exe::main"
+simunet_generate_thcovmat = "simunet.theory_covmat_exe:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

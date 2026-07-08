@@ -26,7 +26,9 @@ from nnpdf_data.utils import yaml_safe
 from validphys.api import API
 from validphys.convolution import OP
 from validphys.pineparser import EXT
-from validphys.theorycovariance.construction import covs_pt_prescrip as validphys_covs_pt_prescrip
+from validphys.theorycovariance.construction import (
+    covs_pt_prescrip_mhou as validphys_covs_pt_prescrip,
+)
 
 setVerbosity(0)
 
@@ -292,7 +294,7 @@ def apply_pineappl_monkeypatch():
     validphys.theorycovariance.construction.results_central_bytheoryids = (
         new_results_central_by_theoryid
     )
-    validphys.theorycovariance.construction.covs_pt_prescrip = new_covs_pt_prescrip
+    validphys.theorycovariance.construction.covs_pt_prescrip_mhou = new_covs_pt_prescrip
 
     # Make sure that from_convolution is never accessed
     def raise_me(pdf, dataset, **kwargs):
