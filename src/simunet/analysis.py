@@ -186,12 +186,25 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
         yield fig
 
 
-def simu_fac_to_popxf(data, pdf, dataset_inputs_covariance_matrix, simunet_one_or_more_results):
+def simu_fac_to_popxf(
+    data, pdf, dataset_inputs_covariance_matrix, simunet_one_or_more_results, covmat_paths=None
+):
     # dataset_inputs_covariance_matrix
     "This function produces a popxf file with the BSM factors for each dataset"
     cov_index = 0
     written = []
-    cov = dataset_inputs_covariance_matrix
+    cov = dataset_inputs_covariance_matrix.copy()
+    if covmat_paths is not None:
+        for path in covmat_paths:
+            if not os.path.exists(path):
+                log.warning(f"Covariance matrix path {path} does not exist. Skipping.")
+                continue
+            # Load csv covmat
+            df = pd.read_csv(path, sep="\t")
+            # Remove headers
+            extra_covmat = df.iloc[3:, 3:].astype(float).to_numpy()
+            cov += extra_covmat
+
     for dataset in data.datasets:
         log.info(f"Processing dataset {dataset.name} for popxf generation.")
         dataset_name = dataset.name
