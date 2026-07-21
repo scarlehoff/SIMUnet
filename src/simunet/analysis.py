@@ -10,7 +10,8 @@ from validphys.utils import yaml_safe
 from validphys.fitdata import replica_paths
 from validphys.commondata import loaded_commondata_with_cuts
 from validphys.covmats import sqrt_covmat
-
+import json
+from pathlib import Path
 from simunet.fitdata import read_bsm_facs
 
 log = logging.getLogger(__name__)
@@ -53,13 +54,13 @@ def load_datasets_contamination(data):
         if cont_order == None:
             log.warning(f"{dataset.name} is not contaminated. Is it right?")
 
-            bsm_dict[dataset.name] = np.ones(dataset.commondata.ndata)
+            bsm_dict[dataset.name] = np.zeros(len(cuts))
 
         elif not os.path.exists(cont_path):
             log.error(
                 f"Could not find a BSM-factor for {dataset.name}. Are you sure they exist in the given theory?"
             )
-            bsm_dict[dataset.name] = np.ones(dataset.commondata.ndata)
+            bsm_dict[dataset.name] = np.zeros(len(cuts))
         else:
             log.info(f"Loading {dataset.name}.")
             with open(cont_path, "r+") as stream:
@@ -206,3 +207,107 @@ def plot_nd_bsm_facs_fits(
                     )
                     ax.legend(fontsize=14)
         yield fig
+
+
+def simu_fac_to_popxf(
+    data, pdf, dataset_inputs_covariance_matrix, simunet_one_or_more_results, covmat_paths=None
+):
+    # dataset_inputs_covariance_matrix
+    "This function produces a popxf file with the BSM factors for each dataset"
+    cov_index = 0
+    written = []
+    cov = dataset_inputs_covariance_matrix.copy()
+    if covmat_paths is not None:
+        for path in covmat_paths:
+            if not os.path.exists(path):
+                log.warning(f"Covariance matrix path {path} does not exist. Skipping.")
+                continue
+            # Load csv covmat
+            df = pd.read_csv(path, sep="\t")
+            # Remove headers
+            extra_covmat = df.iloc[3:, 3:].astype(float).to_numpy()
+            cov += extra_covmat
+
+    for dataset in data.datasets:
+        log.info(f"Processing dataset {dataset.name} for popxf generation.")
+        dataset_name = dataset.name
+        cuts = dataset.cuts.load()
+        simu_dict = l.get_simu_parameters_name_dict(
+            dataset.name, simu_parameters_names=[dataset.contamination]
+        )
+        simu_path = list(simu_dict.values())[0]
+        simu = yaml_safe.load(simu_path.read_text())
+
+        if dataset.use_fixed_predictions:
+            SM_predictions = np.array(simu.get("SM_fixed", []))[cuts]
+            pdf_name = "fixed_predictions"
+        else:
+            SM_predictions = simunet_one_or_more_results[1].central_value
+            pdf_name = str(pdf.name)
+
+        eft_lo = simu.get("EFT_LO")
+
+        SMEFT_K_factors = {k: np.array(v)[cuts] for k, v in eft_lo.items()}
+        parameters = [k for k in SMEFT_K_factors.keys() if k != "SM"]
+
+        obs_names = [f"({dataset_name}, bin_{i})" for i in range(len(cuts))]
+
+        observable_central = {"('', '', 'RR')": np.zeros(len(cuts)).tolist()}
+        for k in parameters:
+            b = SM_predictions * SMEFT_K_factors[k] / SMEFT_K_factors["SM"] * 1000**2  # in GeV^-2
+            observable_central[f"('', '{k}', 'RR')"] = b.tolist()
+
+        popxf_dict = {
+            "$schema": "https://json.schemastore.org/popxf-1.0.json",
+            "metadata": {
+                "basis": {"custom": {"name": "u2"}},
+                "scale": 1000.0,
+                "parameters": parameters,
+                "observable_names": obs_names,
+                "reproducibility": {"tools": {"name": "validphys"}},
+                "pdf": pdf_name,
+                "QCD": "",
+                "EWK": "",
+                "SMEFT": "",
+            },
+            "data": {"observable_central": observable_central},
+        }
+
+        cd = dataset.commondata.load().get_cv()[cuts]
+        central_value = cd - SM_predictions
+        dataset_cov = cov[
+            cov_index : cov_index + len(cuts), cov_index : cov_index + len(cuts)
+        ]  # Not sure if this is the correct method
+        cov_index += len(cuts)
+        standard_deviation = np.sqrt(np.diag(dataset_cov))
+        correlation = dataset_cov / np.outer(standard_deviation, standard_deviation)
+
+        pdfxf_dict = {
+            "$schema": "https://json.schemastore.org/pdfxf-1.0.json",
+            dataset_name: [
+                {
+                    "observables": obs_names,
+                    "distribution_type": "MultivariateNormalDistribution",
+                    "central_value": central_value.tolist(),
+                    "standard_deviation": standard_deviation.tolist(),
+                    "correlation": correlation.tolist(),
+                }
+            ],
+        }
+
+        likelihood_files = Path("likelihood_files")
+
+        pdf_dir = likelihood_files / str(pdf_name)
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+
+        popxf_path = pdf_dir / f"{dataset_name}.json"
+        pdfxf_path = pdf_dir / f"{dataset_name}_measurement.json"
+
+        popxf_path.write_text(json.dumps(popxf_dict, indent=4))
+        pdfxf_path.write_text(json.dumps(pdfxf_dict, indent=4))
+
+        written.append(dataset_name)
+
+    print(f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {pdf_dir}.")
+
+    return
