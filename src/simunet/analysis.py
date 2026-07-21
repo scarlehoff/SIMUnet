@@ -54,13 +54,13 @@ def load_datasets_contamination(data):
         if cont_order == None:
             log.warning(f"{dataset.name} is not contaminated. Is it right?")
 
-            bsm_dict[dataset.name] = np.ones(len(cuts))
+            bsm_dict[dataset.name] = np.zeros(len(cuts))
 
         elif not os.path.exists(cont_path):
             log.error(
                 f"Could not find a BSM-factor for {dataset.name}. Are you sure they exist in the given theory?"
             )
-            bsm_dict[dataset.name] = np.ones(len(cuts))
+            bsm_dict[dataset.name] = np.zeros(len(cuts))
         else:
             log.info(f"Loading {dataset.name}.")
             with open(cont_path, "r+") as stream:
