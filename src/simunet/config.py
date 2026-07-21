@@ -47,6 +47,10 @@ class SIMUCoreConfig(CoreConfig):
     def loader(self):
         return self.environment.loader
 
+    def parse_analytic_initialisation_pdf(self, name, unpolarized_bc=None):
+        """PDF set used to compute the analytic initialisation."""
+        return self.parse_pdf(name, unpolarized_bc=unpolarized_bc)
+
     def produce_dataset(
         self,
         *,
@@ -62,7 +66,6 @@ class SIMUCoreConfig(CoreConfig):
         Use the cuts from the fit, if provided. If check_plotting is set to
         True, attempt to lod and check the PLOTTING files
         (note this may cause a noticeable slowdown in general)."""
-        print("Producing dataset with SIMUCoreConfig")
         name = dataset_input.name
         cfac = dataset_input.cfac
         frac = dataset_input.frac

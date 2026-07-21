@@ -7,7 +7,6 @@ import numpy as np
 from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
 from validphys.utils import yaml_safe
 from simunet import simufit
-from validphys.core import PDF
 from simunet.results import SIMUnetThPredictionsResult
 import scipy as sp
 
@@ -72,7 +71,7 @@ def construct_analytic_initialisation(
         cuts = dataset_spec.cuts.load()
         ndat = len(cuts)
         pred_values = SIMUnetThPredictionsResult.from_convolution(
-            PDF(analytic_initialisation_pdf), dataset_spec, load_dataset_contamination=None
+            analytic_initialisation_pdf, dataset_spec, load_dataset_contamination=None
         ).error_members
         central_value = pred_values[:, 0]
         sm_predictions.append(central_value)  # Central Value
@@ -150,13 +149,12 @@ def simu_parameters_analytic(
     """
     if analytic_initialisation:
         return construct_analytic_initialisation(
-            data,
-            theoryid,
-            replica,
-            analytic_initialisation_pdf,
-            make_replica,
-            groups_covmat,
-            simu_parameters,
+            data=data,
+            theoryid=theoryid,
+            analytic_initialisation_pdf=analytic_initialisation_pdf,
+            make_replica=make_replica,
+            groups_covmat=groups_covmat,
+            simu_parameters=simu_parameters,
             use_th_covmat=use_th_covmat,
         )
     return simu_parameters
