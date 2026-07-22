@@ -41,7 +41,13 @@ def dataset_t0_predictions(t0dataset, t0set):
         values = np.take(t0dataset.fixed_predictions, t0dataset.cuts.load())
         return values.reshape(-1)
 
-    return validphys_dataset_t0_predictions(t0dataset, t0set)
+    try:
+        return validphys_dataset_t0_predictions(t0dataset, t0set)
+    except BaseException as e:
+        # If pineappl fails to find the FkTable it will throw an exception, give some possible explanation
+        raise ValueError(
+            f"Not able to load the FkTables for {t0dataset}. Perhaps ``use_fixed_predictions`` is needed?"
+        ) from e
 
 
 def fittable_datasets_masked(
