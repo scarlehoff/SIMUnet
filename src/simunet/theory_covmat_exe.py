@@ -16,7 +16,7 @@ from dataclasses import dataclass
 import functools
 from pathlib import Path
 
-from lhapdf import setVerbosity
+from lhapdf import setVerbosity, mkPDF
 import numpy as np
 from numpy.typing import NDArray
 import pandas as pd
@@ -24,6 +24,7 @@ import pineappl
 
 from nnpdf_data.utils import yaml_safe
 from validphys.api import API
+from validphys.core import PDF, MCStats
 from validphys.convolution import OP
 from validphys.pineparser import EXT
 from validphys.theorycovariance.construction import (
@@ -78,6 +79,24 @@ POINT_PRESCRIPTION_SCALES = {
 }
 
 POINT_PRESCRIPTION_ALIASES = {"3": "3 point", "7": "7 point", "9": "9 point"}
+
+# Alpha_S variation in LHAPDF come in non-standard formats
+# when the members are alpha_s variation, we need central - lower - upper
+NON_STANDARD_ALPHAS = {"MSHT20nnlo_as_smallrange": (0, 3, 4)}
+
+
+class _LHA_HOLDER:
+    """Initialize a single PDF member as if it were the central member,
+    and trick validphys into thinking it has everything
+    """
+
+    def __init__(self, pdf_name, member):
+        self._pdf = mkPDF(f"{pdf_name}/{member}")
+        self.members = [self._pdf]
+        self.stats_class = MCStats
+
+    def load_t0(self):
+        return self
 
 
 class PineObject:
@@ -462,11 +481,18 @@ def main():
     apply_pineappl_monkeypatch()
 
     if args.alphas_variation:
-        alphas_pdfs = [
-            API.pdf(pdf=pdf_name),
-            API.pdf(pdf=args.alphas_pdf_lower),
-            API.pdf(pdf=args.alphas_pdf_upper),
-        ]
+        if pdf_name in NON_STANDARD_ALPHAS:
+            # and put some good PDF as the PDF name
+            config["pdf"] = DEFAULT_PDF
+            members = NON_STANDARD_ALPHAS[pdf_name]
+            alphas_pdfs = [_LHA_HOLDER(pdf_name, m) for m in members]
+        else:
+            # We can use validphys normally
+            alphas_pdfs = [
+                API.pdf(pdf=pdf_name),
+                API.pdf(pdf=args.alphas_pdf_lower),
+                API.pdf(pdf=args.alphas_pdf_upper),
+            ]
         theory_covmat = theory_covmat_for_alphas(config, alphas_pdfs)
     else:
         try:
