@@ -48,15 +48,15 @@ def _patch_me_up():
             ret = np.asarray(self.fixed_predictions, dtype=float).reshape(1, 1, -1)
             ret = op.numpy_to_tensor(np.repeat(ret, self.num_replicas, axis=1))
             zero_pdf = op.expand_dims(op.sum(pdf * 0.0, axis=(-1, -2)), axis=-1)
-            return ret + zero_pdf
+            observables = ret + zero_pdf
+        else:
+            observables = original_call(self, pdf)
 
-        observables = original_call(self, pdf)
         # Here do what's now in simunet's model_gen
         # NB: training/validation is now done after the forward pass so the whole cfactor is to be applied
         # something like
         if self.simunet_layer is None:
             return observables
-
         return self.simunet_layer(self.simunet_cfactors, observables)
 
     Observable.__init__ = _init_patch
