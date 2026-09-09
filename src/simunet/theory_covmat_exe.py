@@ -124,7 +124,7 @@ class PineObject:
 
         # Take only the QCD corerctions
         all_ord = self._grid.orders()
-        mask_nnlo = pineappl.boc.Order.create_mask(all_ord, 3, 0, False)
+        mask_nnlo = pineappl.boc.Order.create_mask(all_ord, 3, 0, True)
         scales = CONFIG_HOLDER["scales"]
 
         for _, member in enumerate(pdf.members):
