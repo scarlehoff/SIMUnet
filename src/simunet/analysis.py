@@ -204,9 +204,15 @@ def simu_fac_to_popxf(
             extra_covmat = df.iloc[3:, 3:].astype(float).to_numpy()
             cov += extra_covmat
 
-    for dataset in data.datasets:
+    for data_input, dataset in zip(data, data.datasets):
         log.info(f"Processing dataset {dataset.name} for popxf generation.")
         dataset_name = dataset.name
+        simu_fac = data_input.simu_fac
+        if simu_fac is None:
+            raise ValueError(
+                f"{dataset_name}: Popxf export requires simu_fac in dataset_inputs "
+                "(for example, simu_fac: EFT_NLO)."
+            )
         cuts = dataset.cuts.load()
         simu_dict = l.get_simu_parameters_name_dict(
             dataset.name, simu_parameters_names=[dataset.contamination]
@@ -221,9 +227,9 @@ def simu_fac_to_popxf(
             SM_predictions = simunet_one_or_more_results[1].central_value
             pdf_name = str(pdf.name)
 
-        eft_lo = simu.get("EFT_LO")
+        eft_factors = simu.get(simu_fac)
 
-        SMEFT_K_factors = {k: np.array(v)[cuts] for k, v in eft_lo.items()}
+        SMEFT_K_factors = {k: np.array(v)[cuts] for k, v in eft_factors.items()}
         parameters = [k for k in SMEFT_K_factors.keys() if k != "SM"]
 
         obs_names = [f"({dataset_name}, bin_{i})" for i in range(len(cuts))]
@@ -244,7 +250,7 @@ def simu_fac_to_popxf(
                 "pdf": pdf_name,
                 "QCD": "",
                 "EWK": "",
-                "SMEFT": "",
+                "SMEFT": simu_fac,
             },
             "data": {"observable_central": observable_central},
         }
