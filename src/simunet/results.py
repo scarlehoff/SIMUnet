@@ -1,27 +1,18 @@
-from simunet.core import SIMUnetDataSetSpec
-from validphys.core import PDF, DataGroupSpec
-from validphys.results import DataResult, ThPredictionsResult
-from reportengine.checks import remove_outer, require_one
-from validphys.convolution import (
-    PredictionsRequireCutsError,
-    central_predictions,
-    predictions,
-)
+from collections.abc import Sequence
 
+import numpy as np
 import pandas as pd
 
-from collections.abc import Sequence
+from reportengine.checks import remove_outer, require_one
+from simunet.core import SIMUnetDataSetSpec
+from validphys.convolution import PredictionsRequireCutsError, central_predictions, predictions
+from validphys.core import PDF, DataGroupSpec
+from validphys.results import DataResult, ThPredictionsResult
 
 
 class SIMUnetThPredictionsResult(ThPredictionsResult):
     def __init__(
-        self,
-        dataobj,
-        stats_class,
-        datasetnames=None,
-        label=None,
-        pdf=None,
-        theoryid=None,
+        self, dataobj, stats_class, datasetnames=None, label=None, pdf=None, theoryid=None
     ):
         super().__init__(
             dataobj=dataobj,
@@ -33,9 +24,7 @@ class SIMUnetThPredictionsResult(ThPredictionsResult):
         )
 
     @classmethod
-    def from_convolution(
-        cls, pdf, dataset, load_dataset_contamination, central_only=False
-    ):
+    def from_convolution(cls, pdf, dataset, load_dataset_contamination, central_only=False):
         # This should work for both single dataset and whole groups
         try:
             datasets = dataset.datasets
@@ -43,15 +32,26 @@ class SIMUnetThPredictionsResult(ThPredictionsResult):
             datasets = (dataset,)
 
         try:
-            if central_only:
-                preds = [central_predictions(d, pdf) for d in datasets]
-            else:
-                preds = [predictions(d, pdf) for d in datasets]
+            preds = []
+            for d in datasets:
+                if getattr(d, "use_fixed_predictions", False):
+                    values = np.asarray(d.fixed_predictions, dtype=float)
+                    if d.cuts is not None:
+                        values = np.take(values, d.cuts.load())
+                    nmembers = 1 if central_only else pdf.get_members()
+                    preds.append(
+                        pd.DataFrame(
+                            np.tile(values[:, None], (1, nmembers)),
+                            index=pd.Index(range(len(values)), name="data"),
+                        )
+                    )
+                elif central_only:
+                    preds.append(central_predictions(d, pdf))
+                else:
+                    preds.append(predictions(d, pdf))
             th_predictions = pd.concat(preds)
             if load_dataset_contamination is not None:
-                th_predictions *= (
-                    1.0 + load_dataset_contamination[dataset.name][:, None]
-                )
+                th_predictions *= 1.0 + load_dataset_contamination[dataset.name][:, None]
 
         except PredictionsRequireCutsError as e:
             raise PredictionsRequireCutsError(
@@ -62,9 +62,7 @@ class SIMUnetThPredictionsResult(ThPredictionsResult):
         label = cls.make_label(pdf, dataset)
         thid = dataset.thspec.id
         datasetnames = [i.name for i in datasets]
-        return cls(
-            th_predictions, pdf.stats_class, datasetnames, label, pdf=pdf, theoryid=thid
-        )
+        return cls(th_predictions, pdf.stats_class, datasetnames, label, pdf=pdf, theoryid=thid)
 
 
 def simu_results(
@@ -83,9 +81,7 @@ def simu_results(
     """
     return (
         DataResult(dataset, covariance_matrix, sqrt_covmat),
-        SIMUnetThPredictionsResult.from_convolution(
-            pdf, dataset, load_datasets_contamination
-        ),
+        SIMUnetThPredictionsResult.from_convolution(pdf, dataset, load_datasets_contamination),
     )
 
 
