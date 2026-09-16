@@ -64,6 +64,7 @@ def construct_analytic_initialisation(
             name=ds.name,
             theoryid=theoryid,
             cfac=ds.cfac,
+            variant=ds.variant,
             contamination=ds.contamination,
             simu_parameters_names=ds.simu_parameters_names,
             simu_parameters_linear_combinations=ds.simu_parameters_linear_combinations,
