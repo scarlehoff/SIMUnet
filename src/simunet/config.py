@@ -62,7 +62,7 @@ class SIMUCoreConfig(CoreConfig):
         Use the cuts from the fit, if provided. If check_plotting is set to
         True, attempt to lod and check the PLOTTING files
         (note this may cause a noticeable slowdown in general)."""
-        print("Producing dataset with SIMUCoreConfig")
+        log.info("Producing dataset with SIMUCoreConfig")
         name = dataset_input.name
         cfac = dataset_input.cfac
         frac = dataset_input.frac
@@ -133,7 +133,28 @@ class SIMUCoreConfig(CoreConfig):
         return 0
 
     def produce_contamination_data(self, closuretest):
-        print("Producing contamination data")
+        """
+        Produces the contamination data diction from the closuretest runcard entry
+
+        Example in the runcard:
+        -----------------------
+        closuretest:
+        contamination_parameters:
+            - name: 'W'
+            value: 0.00008
+            linear_combination:
+                'Olq3': -15.94
+            - name: 'Y'
+                value: 0.05
+                linear_combination:
+                Olq1: 1.51606
+                Oed: -6.0606
+                Oeu: 12.1394
+                Olu: 6.0606
+                Old: -3.0394
+                Oqe: 3.0394
+        """
+        log.info("Producing contamination data")
         if "contamination_parameters" in closuretest.keys():
             return closuretest["contamination_parameters"]
         else:
@@ -165,6 +186,12 @@ class SIMUCoreConfig(CoreConfig):
             for entry in simu_parameters:
                 bsm_names_to_latex[entry['name']] = entry['latex']
             return bsm_names_to_latex
+
+    def produce_bsm_names_to_plot_scales(self, simu_parameters=None):
+        """Map coefficient names to display multipliers, defaulting to one."""
+        if simu_parameters is None:
+            return None
+        return {entry["name"]: entry.get("plot_scale", 1) for entry in simu_parameters}
 
     @element_of("dataset_inputs")
     def parse_dataset_input(

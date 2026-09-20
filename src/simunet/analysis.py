@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from reportengine.figure import figuregen
 from simunet.loader import SIMUnetLoader
-from validphys.dataplots import plot_fancy
+from validphys.dataplots import check_normalize_to, plot_fancy
 import logging
 import numpy as np
 import os
@@ -88,14 +88,22 @@ def load_datasets_contamination(data):
     return bsm_dict
 
 
+@check_normalize_to
 @figuregen
-def plot_data_theory_contaminated(simunet_one_or_more_results, commondata, cuts):
-    return plot_fancy(simunet_one_or_more_results, commondata, cuts)
+def plot_data_theory_contaminated(
+    simunet_one_or_more_results, commondata, cuts, normalize_to: (int, str, type(None)) = None
+):
+    """Plot contaminated data and theory, optionally normalized as in plot_fancy."""
+    return plot_fancy(simunet_one_or_more_results, commondata, cuts, normalize_to=normalize_to)
 
 
 @figuregen
 def plot_nd_bsm_facs_fits(
-    fits, bsm_names_to_latex, posterior_plots_settings, contamination_data=None
+    fits,
+    bsm_names_to_latex,
+    posterior_plots_settings,
+    contamination_data=None,
+    bsm_names_to_plot_scales=None,
 ):
     """
     Compare histograms of BSM factors between different fits in SIMUnet.
@@ -109,11 +117,18 @@ def plot_nd_bsm_facs_fits(
     posterior_plots_settings : dict, optional
         Dictionary containing settings for posterior plots such as 'n_bins', 'rangex', 'rangey', and 'same_bins'.
 
+    bsm_names_to_plot_scales : dict, optional
+        Display multipliers for coefficients. Missing entries default to one.
+        Histogram bins, bounds and expected values use the scaled coordinates;
+        rangex and rangey are interpreted in the displayed coordinates.
+
     Yields
     ------
     fig : matplotlib.figure.Figure
         A matplotlib figure object for each BSM coefficient comparison.
     """
+    plot_scales = bsm_names_to_plot_scales or {}
+
     # extract settings
 
     same_bins = posterior_plots_settings.get("same_bins", False)
@@ -151,6 +166,9 @@ def plot_nd_bsm_facs_fits(
         for fit in fits:
             paths = replica_paths(fit)
             bsm_facs_df = read_bsm_facs(paths)
+            bsm_facs_df = bsm_facs_df.mul(
+                [plot_scales.get(op, 1) for op in bsm_facs_df.columns], axis="columns"
+            )
             min_df = bsm_facs_df.min()
             max_df = bsm_facs_df.max()
             min_bins = pd.concat([min_bins, min_df], axis=1).min(axis=1)
@@ -158,6 +176,7 @@ def plot_nd_bsm_facs_fits(
 
     # plot all operators
     for op in all_ops:
+        plot_scale = plot_scales.get(op, 1)
         fig, ax = plt.subplots()
         for fit in fits:
             paths = replica_paths(fit)
@@ -168,7 +187,7 @@ def plot_nd_bsm_facs_fits(
                 bins = n_bins
 
             if bsm_facs_df.get([op]) is not None:
-                values = bsm_facs_df.get([op]).values
+                values = plot_scale * bsm_facs_df.get([op]).values
                 if add_bounds:
                     hist_label = f"{fit.label} (mean & std dev)"
                 else:
@@ -176,12 +195,13 @@ def plot_nd_bsm_facs_fits(
                 ax.hist(values, bins=bins, density=True, alpha=0.5, label=hist_label)
                 ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
                 ax.set_ylabel("Prob. density", fontsize=14)
+                label = op if bsm_names_to_latex is None else bsm_names_to_latex[op]
+                if plot_scale != 1:
+                    label = str(plot_scale) + r"$\cdot$" + label
                 if bsm_names_to_latex is None:
-                    ax.set_xlabel(op, fontsize=14)
+                    ax.set_xlabel(label, fontsize=14)
                 else:
-                    ax.set_xlabel(
-                        bsm_names_to_latex[op] + r"$/\Lambda^2$ [TeV$^{-2}$]", fontsize=16
-                    )
+                    ax.set_xlabel(label + r"$/\Lambda^2$ [TeV$^{-2}$]", fontsize=16)
 
                 ax.grid(False)
                 if rangex is not None:
@@ -198,7 +218,7 @@ def plot_nd_bsm_facs_fits(
                 ax.legend(fontsize=14)
                 if exp_val_lines is not None and exp_val_lines_dict.get(op) is not None:
                     ax.axvline(
-                        exp_val_lines_dict[op],
+                        plot_scale * exp_val_lines_dict[op],
                         color='r',
                         linestyle='-.',
                         linewidth=2.5,
