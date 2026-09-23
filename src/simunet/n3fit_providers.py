@@ -115,7 +115,7 @@ def _construct_analytic_initialisation(
     total_covmat = groups_covmat + th_covmat + pdf_covmat
 
     sol, minval = _analytic_solution(exp_data, sm_predictions, linear_bsm, total_covmat)
-    simu_parameters_scales = [1 / abs(ini) for ini in sol]
+    simu_parameters_scales = [1 / abs(ini) if ini != 0 else 1.0 for ini in sol]
     log.info("The analytic solution is " + str(sol))
     log.info("The minimum is achieved at chi2=" + str(minval))
     for param, scale, init in zip(simu_parameters, simu_parameters_scales, sol):

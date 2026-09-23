@@ -4,13 +4,13 @@ from n3fit.backends import MetaLayer
 
 
 def _choose_initializer(ini_dict, scale=1.0):
-    # TODO change to a provider
+    """Convert physical initial values to internal weights, where weight = scale * coefficient."""
     if ini_dict["type"] == "uniform":
-        max_v = ini_dict["maxval"] / scale
-        min_v = ini_dict["minval"] / scale
+        max_v = ini_dict["maxval"] * scale
+        min_v = ini_dict["minval"] * scale
         return MetaLayer.select_initializer("random_uniform", minval=min_v, maxval=max_v)
     elif ini_dict["type"] == "constant":
-        return MetaLayer.init_constant(ini_dict["value"] / scale)
+        return MetaLayer.init_constant(ini_dict["value"] * scale)
     raise ValueError(f"{ini_dict} not understood")
 
 
@@ -43,9 +43,11 @@ class CombineCfacLayer(MetaLayer):
             yield parameter.get("scale", 1.0)
 
     def build(self, input_shape):
-        """Build stage should only be run at compile time or first inference.""" 
+        """Build stage should only be run at compile time or first inference."""
         for parameter in self._simu_parameters:
-            initializer = _choose_initializer(parameter["initialisation"])
+            initializer = _choose_initializer(
+                parameter["initialisation"], scale=parameter.get("scale", 1.0)
+            )
             ker = self.builder_helper(
                 name=parameter["name"],
                 kernel_shape=(1,),  # TODO here we could have a different one per replica
