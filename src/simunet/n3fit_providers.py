@@ -26,8 +26,6 @@ def analytic_solution(data, theorySM, theorylin, covmat):
 
     diff = data - theorySM
 
-    theorylin = theorylin
-
     part1 = np.linalg.solve(covmat, theorylin)
     part2 = np.linalg.solve(covmat, diff)
 
