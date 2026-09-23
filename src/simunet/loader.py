@@ -1,8 +1,7 @@
 import importlib.resources
 import logging
+from functools import lru_cache
 from pathlib import Path
-
-import yaml
 
 from nnpdf_data.validphys_compatibility import new_to_legacy_map
 from validphys.core import CutsPolicy, TheoryIDSpec
@@ -62,26 +61,27 @@ class SIMUnetLoader(Loader):
                 )
                 raise CfactorNotFound(msg)
 
-        # test whether all the mandatory keys are present
-        with open(simufactorpath, "rb") as stream:
-            cfac_file = yaml_safe.load(stream)
+        self.load_simu_factors(simufactorpath)
 
-        if "metadata" not in cfac_file:
-            raise KeyError(
-                f"The 'metadata' key is not present in the SIMU file at {simufactorpath}."
-            )
-
-        if "SM_fixed" not in cfac_file:
-            raise KeyError(
-                f"The 'SM_fixed' key is not present in the SIMU file at {simufactorpath}."
-            )
-
-        # TODO: to ask, why can't we read here the file directly instead of doing it in the provider
         # assign to each operator name the same simufactorpath
         for simu_parameters_name in simu_parameters_names:
             simu_fac_names_paths[simu_parameters_name] = simufactorpath
 
         return simu_fac_names_paths
+
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def load_simu_factors(simufactorpath):
+        """Load a SIMU YAML file once per path, across loader instances.
+
+        The returned mapping is shared and must be treated as read-only. The cache
+        lasts for the process lifetime; call ``load_simu_factors.cache_clear()``
+        to reload files after editing them in an interactive session.
+        """
+        with open(simufactorpath, "rb") as stream:
+            simu_info = yaml_safe.load(stream)
+
+        return simu_info
 
     def check_dataset(
         self,

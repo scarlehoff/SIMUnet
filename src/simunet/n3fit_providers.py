@@ -5,7 +5,6 @@ Contains the providers that n3fit will use and that we want to override
 import numpy as np
 
 from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
-from validphys.utils import yaml_safe
 from simunet import simufit
 from simunet.results import SIMUnetThPredictionsResult
 import scipy as sp
@@ -80,12 +79,8 @@ def construct_analytic_initialisation(
         all_pred_replicas.append(pred_replicas)
 
         if ds.simu_parameters_names is not None:
-            simu_dict = l.get_simu_parameters_name_dict(
-                ds.name, simu_parameters_names=ds.simu_parameters_names
-            )
-            simu_path = list(simu_dict.values())[0]
-            with open(simu_path, "rb") as stream:
-                simu_info = yaml_safe.load(stream)
+            simu_path = next(iter(dataset_spec.simu_parameters_names_CF.values()))
+            simu_info = l.load_simu_factors(simu_path)
             columns = []
             for param in ds.simu_parameters_linear_combinations:
                 model = "_".join(param.split("_")[:-1])
@@ -195,14 +190,13 @@ def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=Non
             # Nothing to do here
             continue
 
-        # Loop over the cfactors that have been parsed
+        # Load the SIMU file used to construct the BSM correction factors
         # TODO (will there be ever more than one? if so... how to deal with it?)
         cuts = dataset.cuts.load().tolist()
-        for cfac_file in dataset.simu_parameters_names_CF.values():
-            with open(cfac_file, "rb") as stream:
-                cfac_data = yaml_safe.load(stream)
+        for simu_path in dataset.simu_parameters_names_CF.values():
+            simu_info = l.load_simu_factors(simu_path)
 
-            cfactors_raw = simu_layer_generated.apply_linear_comb(cfac_data[data_input.simu_fac])
+            cfactors_raw = simu_layer_generated.apply_linear_comb(simu_info[data_input.simu_fac])
             cfactors = [np.take(i, indices=cuts, mode="clip") for i in cfactors_raw]
             break
 
