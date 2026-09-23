@@ -48,12 +48,12 @@ def _construct_analytic_initialisation(
     """
     Constructs the analytic initialisation for the simu_parameters.
     """
+    # TODO: Add in the ability to use contmainated data in the analytic initialisation
     sm_predictions = []
     linear_bsm = []
     th_covmat = []
     all_pred_replicas = []
     exp_data = make_replica
-    # TODO: Check that this changes with contamination
     nop = len(simu_parameters)
     # Reuse the configured datasets so predictions retain the fit's cuts and ordering.
     for ds in data.datasets:

@@ -3,14 +3,14 @@ import numpy as np
 from n3fit.backends import MetaLayer
 
 
-def _choose_initializer(ini_dict, scale=1.0):
-    """Convert physical initial values to internal weights, where weight = scale * coefficient."""
+def _choose_initializer(ini_dict):
+    """Create an initializer whose values are physical coefficients."""
     if ini_dict["type"] == "uniform":
-        max_v = ini_dict["maxval"] * scale
-        min_v = ini_dict["minval"] * scale
+        max_v = ini_dict["maxval"]
+        min_v = ini_dict["minval"]
         return MetaLayer.select_initializer("random_uniform", minval=min_v, maxval=max_v)
     elif ini_dict["type"] == "constant":
-        return MetaLayer.init_constant(ini_dict["value"] * scale)
+        return MetaLayer.init_constant(ini_dict["value"])
     raise ValueError(f"{ini_dict} not understood")
 
 
@@ -45,13 +45,18 @@ class CombineCfacLayer(MetaLayer):
     def build(self, input_shape):
         """Build stage should only be run at compile time or first inference."""
         for parameter in self._simu_parameters:
-            initializer = _choose_initializer(
-                parameter["initialisation"], scale=parameter.get("scale", 1.0)
-            )
+            initializer = _choose_initializer(parameter["initialisation"])
+            scale = parameter.get("scale", 1.0)
+
+            # Keras calls this with the weight shape; scale the resulting tensor.
+            # Bind defaults so each parameter retains its own initializer and scale.
+            def scaled_initializer(shape, dtype=None, initializer=initializer, scale=scale):
+                return initializer(shape, dtype=dtype) * scale
+
             ker = self.builder_helper(
                 name=parameter["name"],
                 kernel_shape=(1,),  # TODO here we could have a different one per replica
-                initializer=initializer,
+                initializer=scaled_initializer,
                 trainable=True,
             )
             self._kernel.append(ker)
