@@ -39,7 +39,6 @@ def _analytic_solution(data, theorySM, theorylin, covmat):
 
 def _construct_analytic_initialisation(
     data,
-    theoryid,
     analytic_initialisation_pdf,
     make_replica,
     groups_covmat,
@@ -56,20 +55,12 @@ def _construct_analytic_initialisation(
     exp_data = make_replica
     # TODO: Check that this changes with contamination
     nop = len(simu_parameters)
-    for ds in data:
-        dataset_spec = l.check_dataset(
-            name=ds.name,
-            theoryid=theoryid,
-            cfac=ds.cfac,
-            variant=ds.variant,
-            contamination=ds.contamination,
-            simu_parameters_names=ds.simu_parameters_names,
-            simu_parameters_linear_combinations=ds.simu_parameters_linear_combinations,
-        )
-        cuts = dataset_spec.cuts.load()
+    # Reuse the configured datasets so predictions retain the fit's cuts and ordering.
+    for ds in data.datasets:
+        cuts = ds.cuts.load()
         ndat = len(cuts)
         pred_values = SIMUnetThPredictionsResult.from_convolution(
-            analytic_initialisation_pdf, dataset_spec, load_dataset_contamination=None
+            analytic_initialisation_pdf, ds, load_dataset_contamination=None
         ).error_members
         central_value = pred_values[:, 0]
         sm_predictions.append(central_value)  # Central Value
@@ -77,7 +68,7 @@ def _construct_analytic_initialisation(
         all_pred_replicas.append(pred_replicas)
 
         if ds.simu_parameters_names is not None:
-            simu_path = next(iter(dataset_spec.simu_parameters_names_CF.values()))
+            simu_path = next(iter(ds.simu_parameters_names_CF.values()))
             simu_info = l.load_simu_factors(simu_path)
             columns = []
             for param in ds.simu_parameters_linear_combinations:
@@ -85,7 +76,7 @@ def _construct_analytic_initialisation(
                 column = np.zeros((ndat,))
                 for key in ds.simu_parameters_linear_combinations[param]:
                     if key in simu_info[model].keys():
-                        model_values = [simu_info[model][key][i] for i in cuts]
+                        model_values = np.asarray(simu_info[model][key])[cuts]
                         column += np.array(
                             model_values * ds.simu_parameters_linear_combinations[param][key]
                         )
@@ -95,14 +86,20 @@ def _construct_analytic_initialisation(
                 columns += [column]
             linear_bsm.append(np.array(columns).T)
 
-            if (
-                use_th_covmat == True
-                and "theory_cov" in simu_info.keys()
-                and len(simu_info["theory_cov"]) > 0
-            ):
-                th_covmat += [np.array(simu_info["theory_cov"])]
-            else:
-                th_covmat += [np.zeros((ndat, ndat))]
+            dataset_th_covmat = np.zeros((ndat, ndat))
+            if use_th_covmat:
+                stored_covmat = np.asarray(simu_info.get("theory_cov", []), dtype=float)
+                # YAML rows describe the covariance in the original data-point order.
+                # Empty placeholders ([[]], [[[[]]]], etc.) carry no uncertainty.
+                if stored_covmat.size:
+                    expected_shape = (ds.commondata.ndata, ds.commondata.ndata)
+                    if stored_covmat.shape != expected_shape:
+                        raise ValueError(
+                            f"{ds.name}: theory_cov in {simu_path} must have uncut shape "
+                            f"{expected_shape}, got {stored_covmat.shape}."
+                        )
+                    dataset_th_covmat = stored_covmat[np.ix_(cuts, cuts)]
+            th_covmat.append(dataset_th_covmat)
         else:
 
             linear_bsm.append(np.zeros((ndat, nop)))
@@ -129,8 +126,6 @@ def _construct_analytic_initialisation(
 
 def simu_parameters_analytic(
     data,
-    theoryid,
-    replica,
     analytic_initialisation_pdf,
     make_replica,
     groups_covmat,
@@ -144,7 +139,6 @@ def simu_parameters_analytic(
     if analytic_initialisation:
         return _construct_analytic_initialisation(
             data=data,
-            theoryid=theoryid,
             analytic_initialisation_pdf=analytic_initialisation_pdf,
             make_replica=make_replica,
             groups_covmat=groups_covmat,
