@@ -1,6 +1,6 @@
 from reportengine.figure import figuregen
 from simunet.loader import SIMUnetLoader
-from validphys.dataplots import plot_fancy
+from validphys.dataplots import check_normalize_to, plot_fancy
 import logging
 import numpy as np
 import os
@@ -78,16 +78,16 @@ def load_datasets_contamination(data):
                         log.warning(
                             f"Operator '{op}' not found for {dataset.name}. Setting K-factor to zero."
                         )
-                k_factors += (
-                    value
-                    * bsm_xs
-                    / np.array(simu_card[dataset.contamination]["SM"])[cuts]
-                )
+                k_factors += value * bsm_xs / np.array(simu_card[dataset.contamination]["SM"])[cuts]
             bsm_dict[dataset.name] = k_factors
 
     return bsm_dict
 
 
+@check_normalize_to
 @figuregen
-def plot_data_theory_contaminated(simunet_one_or_more_results, commondata, cuts):
-    return plot_fancy(simunet_one_or_more_results, commondata, cuts)
+def plot_data_theory_contaminated(
+    simunet_one_or_more_results, commondata, cuts, normalize_to: (int, str, type(None)) = None
+):
+    """Plot contaminated data and theory, optionally normalized as in plot_fancy."""
+    return plot_fancy(simunet_one_or_more_results, commondata, cuts, normalize_to=normalize_to)
