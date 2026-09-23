@@ -16,7 +16,7 @@ l = SIMUnetLoader()
 log = logging.getLogger(__name__)
 
 
-def analytic_solution(data, theorySM, theorylin, covmat):
+def _analytic_solution(data, theorySM, theorylin, covmat):
     """
     Returns the minimum of the chi2 function:
 
@@ -37,7 +37,7 @@ def analytic_solution(data, theorySM, theorylin, covmat):
     return (sol, minval)
 
 
-def construct_analytic_initialisation(
+def _construct_analytic_initialisation(
     data,
     theoryid,
     analytic_initialisation_pdf,
@@ -117,7 +117,7 @@ def construct_analytic_initialisation(
     pdf_covmat = np.cov(pred_replicas_all_datasets)
     total_covmat = groups_covmat + th_covmat + pdf_covmat
 
-    sol, minval = analytic_solution(exp_data, sm_predictions, linear_bsm, total_covmat)
+    sol, minval = _analytic_solution(exp_data, sm_predictions, linear_bsm, total_covmat)
     simu_parameters_scales = [1 / abs(ini) for ini in sol]
     log.info("The analytic solution is " + str(sol))
     log.info("The minimum is achieved at chi2=" + str(minval))
@@ -142,7 +142,7 @@ def simu_parameters_analytic(
     Constructs the analytic initialisation for the simu_parameters if requested.
     """
     if analytic_initialisation:
-        return construct_analytic_initialisation(
+        return _construct_analytic_initialisation(
             data=data,
             theoryid=theoryid,
             analytic_initialisation_pdf=analytic_initialisation_pdf,
