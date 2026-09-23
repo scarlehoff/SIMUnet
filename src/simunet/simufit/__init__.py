@@ -62,13 +62,13 @@ def _patch_me_up():
 
         # Keep track of whether the best epoch changed
         if not hasattr(self, "simunet_best_epoch"):
-            self.simunet_best = -1
+            self.simunet_best_epoch = -1
 
         # TODO: at the moment this is only working for single replicas
         # For multireplica fits simunet_best need to be a list and check the entire _best_epoch list
         # then in the cfactor layer, we'll need a weight per replica for the initialization to be ok
-        if self.simunet_best != self._best_epochs[0]:
-            self.simunet_best = self._best_epochs[0]
+        if self.simunet_best_epoch != self._best_epochs[0]:
+            self.simunet_best_epoch = self._best_epochs[0]
             _REGISTRY["best_weights"] = _REGISTRY["layer"].get_weights()
 
         return ret
