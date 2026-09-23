@@ -61,10 +61,10 @@ def _construct_analytic_initialisation(
         ndat = len(cuts)
         pred_values = SIMUnetThPredictionsResult.from_convolution(
             analytic_initialisation_pdf, ds, load_dataset_contamination=None
-        ).error_members
-        central_value = pred_values[:, 0]
-        sm_predictions.append(central_value)  # Central Value
-        pred_replicas = pred_values[:, 1:]  # Replicas
+        )
+        central_value = pred_values.central_value
+        sm_predictions.append(central_value)
+        pred_replicas = pred_values.error_members
         all_pred_replicas.append(pred_replicas)
 
         if ds.simu_parameters_names is not None:
