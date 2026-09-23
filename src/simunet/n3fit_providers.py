@@ -126,10 +126,10 @@ def _construct_analytic_initialisation(
 
 def simu_parameters_analytic(
     data,
-    analytic_initialisation_pdf,
     make_replica,
     groups_covmat,
     simu_parameters,
+    analytic_initialisation_pdf=None,
     analytic_initialisation=False,
     use_th_covmat=False,
 ):
