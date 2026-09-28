@@ -11,7 +11,6 @@ from validphys.fitdata import replica_paths
 from validphys.commondata import loaded_commondata_with_cuts
 from validphys.covmats import sqrt_covmat
 
-from simunet.fitdata import read_bsm_facs
 
 log = logging.getLogger(__name__)
 l = SIMUnetLoader()
@@ -100,6 +99,7 @@ def plot_data_theory_contaminated(
 @figuregen
 def plot_nd_bsm_facs_fits(
     fits,
+    read_bsm_facs_fits,
     bsm_names_to_latex,
     posterior_plots_settings,
     contamination_data=None,
@@ -112,6 +112,8 @@ def plot_nd_bsm_facs_fits(
     ----------
     fits : NSList
         List of FitSpec to be compared.
+    read_bsm_facs_fits : list of pandas.DataFrame
+        BSM factors for each fit, in the same order as fits.
     bsm_names_to_latex : dict
         Dictionary mapping BSM names to their LaTeX representations.
     posterior_plots_settings : dict, optional
@@ -150,22 +152,13 @@ def plot_nd_bsm_facs_fits(
             for op, coeff in item["linear_combination"].items():
                 exp_val_lines_dict[op] += val * coeff
     # extract all operators in the fits
-    all_ops = []
-    for fit in fits:
-        paths = replica_paths(fit)
-        bsm_facs_df = read_bsm_facs(paths)
-        bsm_fac_ops = bsm_facs_df.columns.tolist()
-        all_ops.append(bsm_fac_ops)
-    # Remove repeated operators
-    all_ops = {o for fit_ops in all_ops for o in fit_ops}
+    all_ops = {op for bsm_facs_df in read_bsm_facs_fits for op in bsm_facs_df.columns}
 
     # If same_bins=True, create binnings
     if same_bins:
         min_bins = pd.Series(dict(zip(list(all_ops), np.full(len(all_ops), np.inf))))
         max_bins = pd.Series(dict(zip(list(all_ops), np.full(len(all_ops), -np.inf))))
-        for fit in fits:
-            paths = replica_paths(fit)
-            bsm_facs_df = read_bsm_facs(paths)
+        for bsm_facs_df in read_bsm_facs_fits:
             bsm_facs_df = bsm_facs_df.mul(
                 [plot_scales.get(op, 1) for op in bsm_facs_df.columns], axis="columns"
             )
@@ -178,9 +171,7 @@ def plot_nd_bsm_facs_fits(
     for op in all_ops:
         plot_scale = plot_scales.get(op, 1)
         fig, ax = plt.subplots()
-        for fit in fits:
-            paths = replica_paths(fit)
-            bsm_facs_df = read_bsm_facs(paths)
+        for fit, bsm_facs_df in zip(fits, read_bsm_facs_fits):
             if same_bins:
                 bins = np.linspace(min_bins.loc[op], max_bins.loc[op], n_bins)
             else:

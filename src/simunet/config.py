@@ -293,6 +293,8 @@ class SIMUCoreConfig(CoreConfig):
         )
 
     def parse_posterior_plots_settings(self, settings):
+        """Parses posterior plot settings, filling in defaults for missing options.
+        Warns about unknown keys."""
         known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds", "exp_val_lines"}
 
         kdiff = settings.keys() - known_keys
