@@ -11,7 +11,6 @@ from validphys.fitdata import replica_paths
 from validphys.commondata import loaded_commondata_with_cuts
 from validphys.covmats import sqrt_covmat
 
-
 log = logging.getLogger(__name__)
 l = SIMUnetLoader()
 
@@ -130,6 +129,14 @@ def plot_nd_bsm_facs_fits(
         A matplotlib figure object for each BSM coefficient comparison.
     """
     plot_scales = bsm_names_to_plot_scales or {}
+    labels = bsm_names_to_latex or {}
+    all_ops = {op for bsm_facs_df in read_bsm_facs_fits for op in bsm_facs_df.columns}
+    unknown_ops = (set(labels) | set(plot_scales)) - all_ops
+    if unknown_ops:
+        raise ValueError(
+            "bsm_plot_settings contains coefficients absent from the fit results: "
+            + ", ".join(sorted(unknown_ops))
+        )
 
     # extract settings
 
@@ -141,18 +148,16 @@ def plot_nd_bsm_facs_fits(
     exp_val_lines = posterior_plots_settings.get("exp_val_lines", None)
     # Produce the vertical line values
     if exp_val_lines == 'SM':
-        exp_val_lines_dict = {op: 0 for op in bsm_names_to_latex.keys()}
+        exp_val_lines_dict = {op: 0 for op in all_ops}
 
     if exp_val_lines == 'CONT':
-        exp_val_lines_dict = {op: 0 for op in bsm_names_to_latex.keys()}
+        exp_val_lines_dict = {op: 0 for op in all_ops}
 
         for item in contamination_data:
             val = item["value"]
 
             for op, coeff in item["linear_combination"].items():
                 exp_val_lines_dict[op] += val * coeff
-    # extract all operators in the fits
-    all_ops = {op for bsm_facs_df in read_bsm_facs_fits for op in bsm_facs_df.columns}
 
     # If same_bins=True, create binnings
     if same_bins:
@@ -186,7 +191,7 @@ def plot_nd_bsm_facs_fits(
                 ax.hist(values, bins=bins, density=True, alpha=0.5, label=hist_label)
                 ax.ticklabel_format(axis='x', style='sci', scilimits=(0, 0))
                 ax.set_ylabel("Prob. density", fontsize=14)
-                label = op if bsm_names_to_latex is None else bsm_names_to_latex[op]
+                label = labels.get(op, op)
                 if plot_scale != 1:
                     label = str(plot_scale) + r"$\cdot$" + label
                 if bsm_names_to_latex is None:

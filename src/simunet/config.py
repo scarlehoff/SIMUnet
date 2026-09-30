@@ -178,20 +178,17 @@ class SIMUCoreConfig(CoreConfig):
         """Load the default grouping of data"""
         return "ALL"
 
-    def produce_bsm_names_to_latex(self, simu_parameters=None):
-        if simu_parameters is None:
+    def produce_bsm_names_to_latex(self, bsm_plot_settings=None):
+        """Map coefficient names to labels from analysis-only plotting settings."""
+        if bsm_plot_settings is None:
             return None
-        else:
-            bsm_names_to_latex = {}
-            for entry in simu_parameters:
-                bsm_names_to_latex[entry['name']] = entry['latex']
-            return bsm_names_to_latex
+        return {name: settings.get("latex", name) for name, settings in bsm_plot_settings.items()}
 
-    def produce_bsm_names_to_plot_scales(self, simu_parameters=None):
+    def produce_bsm_names_to_plot_scales(self, bsm_plot_settings=None):
         """Map coefficient names to display multipliers, defaulting to one."""
-        if simu_parameters is None:
+        if bsm_plot_settings is None:
             return None
-        return {entry["name"]: entry.get("plot_scale", 1) for entry in simu_parameters}
+        return {name: settings.get("plot_scale", 1) for name, settings in bsm_plot_settings.items()}
 
     @element_of("dataset_inputs")
     def parse_dataset_input(
