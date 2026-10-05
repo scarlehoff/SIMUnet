@@ -10,6 +10,7 @@ from validphys import pseudodata
 simunet_providers = [
     "simunet.pseudodata",
     "simunet.analysis",
+    "simunet.fitdata",
     "simunet.results",
     "reportengine.report",
     "validphys.pseudodata",
