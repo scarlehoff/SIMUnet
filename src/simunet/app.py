@@ -7,6 +7,7 @@ from validphys.app import App
 import validphys.commondata
 import validphys.results
 from simunet.config import SIMUConfig, SIMUEnvironment
+from validphys import pseudodata
 
 simunet_providers = [
     "simunet.pseudodata",
@@ -14,9 +15,10 @@ simunet_providers = [
     "simunet.fitdata",
     "simunet.results",
     "reportengine.report",
+    "validphys.pseudodata",
     validphys.commondata,
     validphys.results,
-]  # Does the order here matter?
+] 
 
 
 class SIMUnetApp(App):

@@ -1,5 +1,4 @@
 from simunet.loader import SIMUnetLoader
-from validphys.utils import yaml_safe
 import logging
 import numpy as np
 
@@ -60,9 +59,7 @@ def level0_commondata_wc(data, fakepdf):
             cont_params = dataset.contamination_data
 
             # load simu_card file
-            with open(cont_path, "r+") as stream:
-                simu_card = yaml_safe.load(stream)
-            stream.close()
+            simu_card = l.load_simu_factors(cont_path)
             # K-factors loading
             k_factor = np.zeros(len(t0_prediction))
             if cont_params:
