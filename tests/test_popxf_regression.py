@@ -51,7 +51,10 @@ def run_card(work, card):
     )
     (work / "run.log").write_text(result.stdout)
     assert result.returncode == 0, f"Runcard {card} failed:\n{result.stdout}"
-    outputs = work / "likelihood_files/CT18NNLO"
+    card_config = yaml_safe.load(card.read_text())
+    pdf = card_config["pdf"]
+    pdf_id = pdf["id"] if isinstance(pdf, dict) else pdf
+    outputs = work / "likelihood_files" / pdf_id
     assert {p.name for p in outputs.glob("*.json")} == {
         f"{DATASET}.json", f"{DATASET}_measurement.json"
     }
