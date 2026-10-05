@@ -22,18 +22,18 @@ class SimufitConfig(SIMUConfig, N3FitConfig):
     def produce_simu_layer(self, simu_parameters=None, freeze_pdf=False):
         """
         Parses the simu_parameters dictionary and
-        generates the simunet layer that will be applied to all obserables.
+        generates a function that produces
+        the simunet layer that will be applied to all obserables.
         """
         if simu_parameters is None:
             return None
 
         from simunet.simufit.combine_cfac import CombineCfacLayer
 
-        lay = CombineCfacLayer(simu_parameters)
+        lay = lambda simpar: CombineCfacLayer(simpar)
 
         # Update the register
         simufit._REGISTRY["freeze"] = freeze_pdf
-        simufit._REGISTRY["layer"] = lay
 
         return lay
 
@@ -52,8 +52,8 @@ class SimunfitApp(N3FitApp):
         layer = simufit._REGISTRY["layer"]
         # TODO: for multireplica, need to loop over replicas
         # instead of just taking the first one
-        scaled_coeffs = [(weights[i] / layer.scales[i]).item() for i in range(len(weights))]
-        bsm_fac_df = pd.DataFrame([scaled_coeffs], columns=[i.name for i in layer.weights])
+        ret = {i.name: (w / s).tolist() for i, w, s in zip(layer.weights, weights, layer.scales)}
+        bsm_fac_df = pd.DataFrame(ret)
 
         simu_path = (
             self.environment.replica_path

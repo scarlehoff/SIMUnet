@@ -81,7 +81,7 @@ class SIMUCoreConfig(CoreConfig):
         Use the cuts from the fit, if provided. If check_plotting is set to
         True, attempt to lod and check the PLOTTING files
         (note this may cause a noticeable slowdown in general)."""
-        print("Producing dataset with SIMUCoreConfig")
+        log.info("Producing dataset with SIMUCoreConfig")
         name = dataset_input.name
         cfac = dataset_input.cfac
         frac = dataset_input.frac
@@ -152,7 +152,28 @@ class SIMUCoreConfig(CoreConfig):
         return 0
 
     def produce_contamination_data(self, closuretest):
-        print("Producing contamination data")
+        """
+        Produces the contamination data diction from the closuretest runcard entry
+
+        Example in the runcard:
+        -----------------------
+        closuretest:
+        contamination_parameters:
+            - name: 'W'
+            value: 0.00008
+            linear_combination:
+                'Olq3': -15.94
+            - name: 'Y'
+                value: 0.05
+                linear_combination:
+                Olq1: 1.51606
+                Oed: -6.0606
+                Oeu: 12.1394
+                Olu: 6.0606
+                Old: -3.0394
+                Oqe: 3.0394
+        """
+        log.info("Producing contamination data")
         if "contamination_parameters" in closuretest.keys():
             return closuretest["contamination_parameters"]
         else:
@@ -172,14 +193,21 @@ class SIMUCoreConfig(CoreConfig):
             return simu_parameters_linear_combinations
         return []
 
-    def produce_bsm_names_to_latex(self, simu_parameters=None):
-        if simu_parameters is None:
+    def load_default_data_grouping(self, spec):
+        """Load the default grouping of data"""
+        return "ALL"
+
+    def produce_bsm_names_to_latex(self, bsm_plot_settings=None):
+        """Map coefficient names to labels from analysis-only plotting settings."""
+        if bsm_plot_settings is None:
             return None
-        else:
-            bsm_names_to_latex = {}
-            for entry in simu_parameters:
-                bsm_names_to_latex[entry['name']] = entry['latex']
-            return bsm_names_to_latex
+        return {name: settings.get("latex", name) for name, settings in bsm_plot_settings.items()}
+
+    def produce_bsm_names_to_plot_scales(self, bsm_plot_settings=None):
+        """Map coefficient names to display multipliers, defaulting to one."""
+        if bsm_plot_settings is None:
+            return None
+        return {name: settings.get("plot_scale", 1) for name, settings in bsm_plot_settings.items()}
 
     @element_of("dataset_inputs")
     def parse_dataset_input(
@@ -281,7 +309,9 @@ class SIMUCoreConfig(CoreConfig):
         )
 
     def parse_posterior_plots_settings(self, settings):
-        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds"}
+        """Parses posterior plot settings, filling in defaults for missing options.
+        Warns about unknown keys."""
+        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds", "exp_val_lines"}
 
         kdiff = settings.keys() - known_keys
         for k in kdiff:
@@ -295,6 +325,7 @@ class SIMUCoreConfig(CoreConfig):
             "rangex": settings.get("rangex", None),
             "rangey": settings.get("rangey", None),
             "add_bounds": settings.get("add_bounds", False),
+            "exp_val_lines": settings.get("exp_val_lines", None),
         }
         return posterior_plots_settings
 

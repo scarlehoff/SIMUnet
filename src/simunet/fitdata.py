@@ -1,8 +1,10 @@
 import pandas as pd
+from reportengine import collect
 
 BSM_FAC_FILE = 'bsm_fac.csv'
 
-#@_check_has_bsm_facs
+
+# @_check_has_bsm_facs
 def read_bsm_facs(replica_paths):
     """
     Read the csv saved BSM factors, accounting for the
@@ -10,7 +12,7 @@ def read_bsm_facs(replica_paths):
     for replicas as indices and the list BSM factors as columns
     Parameters
     ----------
-        replica_paths: list 
+        replica_paths: list
     Output
     ------
         bsm_fac_results: pd.DataFrame
@@ -21,4 +23,7 @@ def read_bsm_facs(replica_paths):
 
     rows, _columns = bsm_fac_results.shape
     bsm_fac_results.index = range(1, rows + 1)
-    return bsm_fac_results 
+    return bsm_fac_results
+
+
+read_bsm_facs_fits = collect("read_bsm_facs", ("fits",))
