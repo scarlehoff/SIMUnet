@@ -178,6 +178,18 @@ class SIMUCoreConfig(CoreConfig):
         """Load the default grouping of data"""
         return "ALL"
 
+    def produce_bsm_names_to_latex(self, bsm_plot_settings=None):
+        """Map coefficient names to labels from analysis-only plotting settings."""
+        if bsm_plot_settings is None:
+            return None
+        return {name: settings.get("latex", name) for name, settings in bsm_plot_settings.items()}
+
+    def produce_bsm_names_to_plot_scales(self, bsm_plot_settings=None):
+        """Map coefficient names to display multipliers, defaulting to one."""
+        if bsm_plot_settings is None:
+            return None
+        return {name: settings.get("plot_scale", 1) for name, settings in bsm_plot_settings.items()}
+
     @element_of("dataset_inputs")
     def parse_dataset_input(
         self,
@@ -276,6 +288,27 @@ class SIMUCoreConfig(CoreConfig):
             simu_fac=simu_fac,
             **bsm_data,
         )
+
+    def parse_posterior_plots_settings(self, settings):
+        """Parses posterior plot settings, filling in defaults for missing options.
+        Warns about unknown keys."""
+        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds", "exp_val_lines"}
+
+        kdiff = settings.keys() - known_keys
+        for k in kdiff:
+            log.warning(
+                ConfigError(f"Key '{k}' in posterior_plots_settings not known.", k, known_keys)
+            )
+
+        posterior_plots_settings = {
+            "same_bins": settings.get("same_bins", False),
+            "n_bins": settings.get("n_bins", 10),
+            "rangex": settings.get("rangex", None),
+            "rangey": settings.get("rangey", None),
+            "add_bounds": settings.get("add_bounds", False),
+            "exp_val_lines": settings.get("exp_val_lines", None),
+        }
+        return posterior_plots_settings
 
 
 class SIMUConfig(report.Config, SIMUCoreConfig):
