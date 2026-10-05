@@ -189,7 +189,6 @@ def plot_nd_bsm_facs_fits(fits, bsm_names_to_latex, posterior_plots_settings):
 def simu_fac_to_popxf(
     data, pdf, dataset_inputs_covariance_matrix, simunet_one_or_more_results, covmat_paths=None
 ):
-    # dataset_inputs_covariance_matrix
     "This function produces a popxf file with the BSM factors for each dataset"
     cov_index = 0
     written = []
