@@ -1,6 +1,9 @@
 from collections.abc import Mapping, Sequence
 import logging
 import numbers
+from pathlib import Path
+
+import pandas as pd
 
 from nnpdf_data import legacy_to_new_map
 from reportengine import report
@@ -42,6 +45,22 @@ class SIMUEnvironment(Environment):
 
 
 class SIMUCoreConfig(CoreConfig):
+
+    def produce_external_covmats(self, covmat_paths=None):
+        """Read external matrices separately from the dataset inputs covariance.
+
+        Files use NNPDF's three-level row and column headers and must already
+        match the dataset order and cuts used for the POPxf export.
+        """
+        matrices = []
+        for path in covmat_paths or []:
+            path = Path(path)
+            if not path.exists():
+                log.warning(f"Covariance matrix path {path} does not exist. Skipping.")
+                continue
+            frame = pd.read_csv(path, sep="\t", index_col=[0, 1, 2], header=[0, 1, 2])
+            matrices.append(frame.to_numpy(dtype=float))
+        return matrices
 
     @property
     def loader(self):
