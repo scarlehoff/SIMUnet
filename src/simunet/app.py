@@ -3,11 +3,8 @@ simunet.app.py
 
 """
 
-from validphys.app import App
-import validphys.commondata
-import validphys.results
+from validphys.app import App, providers as validphys_providers
 from simunet.config import SIMUConfig, SIMUEnvironment
-from validphys import pseudodata
 
 simunet_providers = [
     "simunet.pseudodata",
@@ -15,9 +12,6 @@ simunet_providers = [
     "simunet.fitdata",
     "simunet.results",
     "reportengine.report",
-    "validphys.pseudodata",
-    validphys.commondata,
-    validphys.results,
 ] 
 
 
@@ -27,7 +21,7 @@ class SIMUnetApp(App):
 
 
 def main():
-    a = SIMUnetApp(name="simunet", providers=simunet_providers)
+    a = SIMUnetApp(name="simunet", providers=validphys_providers+simunet_providers)
     a.main()
 
 
