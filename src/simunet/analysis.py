@@ -6,7 +6,6 @@ from validphys.dataplots import check_normalize_to, plot_fancy
 import logging
 import numpy as np
 import os
-from validphys.utils import yaml_safe
 from validphys.fitdata import replica_paths
 from validphys.commondata import loaded_commondata_with_cuts
 from validphys.covmats import sqrt_covmat
@@ -249,7 +248,7 @@ def simu_fac_to_popxf(
             dataset.name, simu_parameters_names=[dataset.contamination]
         )
         simu_path = list(simu_dict.values())[0]
-        simu = yaml_safe.load(simu_path.read_text())
+        simu = l.load_simu_factors(simu_path)
 
         if dataset.use_fixed_predictions:
             SM_predictions = np.array(simu.get("SM_fixed", []))[cuts]
