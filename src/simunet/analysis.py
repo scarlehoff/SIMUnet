@@ -321,6 +321,6 @@ def simu_fac_to_popxf(
 
         written.append(dataset_name)
 
-    print(f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {pdf_dir}.")
+    log.info(f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {pdf_dir}.")
 
     return
