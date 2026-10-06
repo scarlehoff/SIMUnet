@@ -30,12 +30,6 @@ def measurement(document):
     return document[DATASET][0]
 
 
-def covariance(document):
-    entry = measurement(document)
-    std = np.asarray(entry["standard_deviation"])
-    return np.asarray(entry["correlation"]) * np.outer(std, std)
-
-
 def assert_close(actual, expected):
     assert np.shape(actual) == np.shape(expected)
     np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=ATOL)
@@ -43,6 +37,10 @@ def assert_close(actual, expected):
 
 def run_card(work, card):
     work.mkdir()
+    card_config = yaml_safe.load(card.read_text())
+    # Make the runcard's test resources available without changing the card.
+    # Isolate generated likelihood files from existing files in the repository.
+    (work / "tests").symlink_to(ROOT / "tests", target_is_directory=True)
     env = dict(os.environ, MPLBACKEND="Agg", BROWSER="true")
     result = subprocess.run(
         [sys.executable, "-m", "simunet.app", str(card)], cwd=work,
@@ -51,7 +49,6 @@ def run_card(work, card):
     )
     (work / "run.log").write_text(result.stdout)
     assert result.returncode == 0, f"Runcard {card} failed:\n{result.stdout}"
-    card_config = yaml_safe.load(card.read_text())
     pdf = card_config["pdf"]
     pdf_id = pdf["id"] if isinstance(pdf, dict) else pdf
     outputs = work / "likelihood_files" / pdf_id
@@ -69,29 +66,6 @@ def reference():
 @pytest.fixture(scope="module")
 def baseline(tmp_path_factory):
     return run_card(tmp_path_factory.mktemp("popxf") / "baseline", RUNCARD)
-
-
-@pytest.fixture(scope="module")
-def with_covariances(tmp_path_factory, reference):
-    work = tmp_path_factory.mktemp("popxf-covariances")
-    n = len(measurement(reference[1])["central_value"])
-    v = np.linspace(-0.3, 0.7, n)
-    # PSD additions with off-diagonal entries test correlations as well as errors.
-    additions = [np.diag(np.linspace(0.2, 1.0, n)), np.outer(v, v)]
-    index = pd.MultiIndex.from_tuples(
-        [("ALL", DATASET, i) for i in range(n)], names=["group", "dataset", "id"]
-    )
-    paths = []
-    for i, extra in enumerate(additions):
-        path = work / f"extra_covariance_{i}.csv"
-        pd.DataFrame(extra, index=index, columns=index).to_csv(path, sep="\t")
-        paths.append(str(path))
-    card = yaml_safe.load(RUNCARD.read_text())
-    card["covmat_paths"] = paths
-    augmented_card = work / "with_covariances.yaml"
-    with augmented_card.open("w") as stream:
-        yaml_safe.dump(card, stream)
-    return run_card(work / "output", augmented_card), sum(additions)
 
 
 @pytest.mark.parametrize("field", ["central_value", "standard_deviation", "correlation"])
@@ -121,24 +95,29 @@ def test_popxf_coefficients(baseline, reference):
         assert_close(actual[name], coefficients)
 
 
-def test_covariance_additions(baseline, with_covariances):
-    augmented, extra = with_covariances
-    # Additional uncertainty must not change the model, central values or ordering.
-    assert augmented[0] == baseline[0]
-    actual, base = measurement(augmented[1]), measurement(baseline[1])
-    assert actual["observables"] == base["observables"]
-    assert_close(actual["central_value"], base["central_value"])
-    expected_cov = covariance(baseline[1]) + extra
-    expected_std = np.sqrt(np.diag(expected_cov))
-    assert_close(actual["standard_deviation"], expected_std)
-    assert_close(actual["correlation"], expected_cov / np.outer(expected_std, expected_std))
-    assert_close(covariance(augmented[1]), expected_cov)
+def test_example_covariance(baseline):
+    card = yaml_safe.load(RUNCARD.read_text())
+    assert card["covmat_paths"]
+    n = len(measurement(baseline[1])["central_value"])
+    expected_index = pd.MultiIndex.from_tuples(
+        [("ALL", DATASET, i) for i in range(n)], names=["group", "dataset", "id"]
+    )
+    extra = np.zeros((n, n))
+    for path in card["covmat_paths"]:
+        frame = pd.read_csv(ROOT / path, sep="\t", index_col=[0, 1, 2], header=[0, 1, 2])
+        assert frame.shape == (n, n)
+        pd.testing.assert_index_equal(frame.index, expected_index)
+        # CSV headers are strings, while row bin IDs are parsed as integers.
+        assert list(frame.columns) == [(g, d, str(i)) for g, d, i in expected_index]
+        values = frame.to_numpy(dtype=float)
+        assert_close(values, values.T)
+        assert np.linalg.eigvalsh(values).min() >= -ATOL
+        extra += values
+    assert np.any(extra - np.diag(np.diag(extra)))
 
 
-@pytest.mark.parametrize("variant", ["baseline", "with_covariances"])
-def test_valid_covariance_and_finite_outputs(request, variant):
-    outputs = request.getfixturevalue(variant)
-    pop, pdf = outputs if variant == "baseline" else outputs[0]
+def test_valid_covariance_and_finite_outputs(baseline):
+    pop, pdf = baseline
     entry = measurement(pdf)
     std = np.asarray(entry["standard_deviation"])
     corr = np.asarray(entry["correlation"])
