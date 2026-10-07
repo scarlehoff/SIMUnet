@@ -2,9 +2,6 @@ name: SIMU factors to POPxf regression
 
 on:
   push:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-  workflow_dispatch:
 
 permissions:
   contents: read
