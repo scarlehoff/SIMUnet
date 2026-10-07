@@ -4,6 +4,32 @@ from validphys.core import DataSetInput, DataSetSpec, FKTableSpec
 
 
 class SIMUnetDataSetSpec(DataSetSpec):
+    """
+    Dataset specification for SIMUnet-based PDF fits.
+
+    Extends DataSetSpec with SIMUnet-specific parameters.
+    Below the parameters that are added with respect to the standard validphys DataSetSpec.
+    They are all optional as "normal" datasets would also go through this path.
+
+    Parameters
+    ----------
+    ...
+    simu_parameters_names_CF : dict, optional
+        Mapping of CF file keys to paths of CFactor files
+    simu_parameters_names : list of str, optional
+        BSM coefficients to include in the fit.
+    simu_parameters_linear_combinations : dict, optional
+        Linear combinations of simulation parameters for the fit
+    use_fixed_predictions : bool, optional
+        Whether to use pre-computed fixed predictions instead of generating them with the fitted PDF
+    fixed_predictions : array-like, optional
+        Pre-computed fixed prediction values (used when use_fixed_predictions is True).
+    contamination : str, optional
+        Contamination parameter for closure tests.
+    contamination_data : dict, optional
+        Contamination data dictionary for closure tests.
+    """
+
     def __init__(
         self,
         *,
@@ -19,6 +45,7 @@ class SIMUnetDataSetSpec(DataSetSpec):
         simu_parameters_names=None,
         simu_parameters_linear_combinations=None,
         use_fixed_predictions=False,
+        fixed_predictions=None,
         contamination=None,
         contamination_data=None,
     ):
@@ -38,6 +65,7 @@ class SIMUnetDataSetSpec(DataSetSpec):
         self.simu_parameters_names = simu_parameters_names
         self.simu_parameters_linear_combinations = simu_parameters_linear_combinations
         self.use_fixed_predictions = use_fixed_predictions
+        self.fixed_predictions = fixed_predictions
         self.contamination = contamination
         self.contamination_data = contamination_data
 
