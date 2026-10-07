@@ -1,15 +1,15 @@
 """Full-runcard POPxf regressions against reviewed reference outputs."""
 
 import json
-import os
 from pathlib import Path
-import subprocess
-import sys
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pandas as pd
 import pytest
 from validphys.utils import yaml_safe
+
+from helper import run_simunet
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE = ROOT / "tests/regression/popxf"
@@ -20,6 +20,7 @@ RTOL, ATOL = 1e-6, 1e-9
 
 
 def read_outputs(directory):
+    """Load the POPxf prediction and measurement documents."""
     return (
         json.loads((directory / f"{DATASET}.json").read_text()),
         json.loads((directory / f"{DATASET}_measurement.json").read_text()),
@@ -32,30 +33,7 @@ def measurement(document):
 
 def assert_close(actual, expected):
     assert np.shape(actual) == np.shape(expected)
-    np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=ATOL)
-
-
-def run_card(work, card):
-    work.mkdir()
-    card_config = yaml_safe.load(card.read_text())
-    # Make the runcard's test resources available without changing the card.
-    # Isolate generated likelihood files from existing files in the repository.
-    (work / "tests").symlink_to(ROOT / "tests", target_is_directory=True)
-    env = dict(os.environ, MPLBACKEND="Agg", BROWSER="true")
-    result = subprocess.run(
-        [sys.executable, "-m", "simunet.app", str(card)], cwd=work,
-        env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        timeout=1200,
-    )
-    (work / "run.log").write_text(result.stdout)
-    assert result.returncode == 0, f"Runcard {card} failed:\n{result.stdout}"
-    pdf = card_config["pdf"]
-    pdf_id = pdf["id"] if isinstance(pdf, dict) else pdf
-    outputs = work / "likelihood_files" / pdf_id
-    assert {p.name for p in outputs.glob("*.json")} == {
-        f"{DATASET}.json", f"{DATASET}_measurement.json"
-    }
-    return read_outputs(outputs)
+    assert_allclose(actual, expected, rtol=RTOL, atol=ATOL)
 
 
 @pytest.fixture(scope="module")
@@ -65,7 +43,19 @@ def reference():
 
 @pytest.fixture(scope="module")
 def baseline(tmp_path_factory):
-    return run_card(tmp_path_factory.mktemp("popxf") / "baseline", RUNCARD)
+    """Run the example runcard once for all output checks."""
+    work = tmp_path_factory.mktemp("popxf") / "baseline"
+    run_simunet(RUNCARD, cwd=work)
+
+    card = yaml_safe.load(RUNCARD.read_text())
+    pdf = card["pdf"]
+    pdf_id = pdf["id"] if isinstance(pdf, dict) else pdf
+    outputs = work / "likelihood_files" / pdf_id
+    assert {path.name for path in outputs.glob("*.json")} == {
+        f"{DATASET}.json",
+        f"{DATASET}_measurement.json",
+    }
+    return read_outputs(outputs)
 
 
 @pytest.mark.parametrize("field", ["central_value", "standard_deviation", "correlation"])
@@ -126,6 +116,10 @@ def test_valid_covariance_and_finite_outputs(baseline):
     assert_close(np.diag(corr), np.ones(len(std)))
     assert np.all(np.abs(corr) <= 1 + ATOL)
     assert np.linalg.eigvalsh(corr).min() >= -ATOL
-    for values in [entry["central_value"], std, corr,
-                   *pop["data"]["observable_central"].values()]:
+    for values in [
+        entry["central_value"],
+        std,
+        corr,
+        *pop["data"]["observable_central"].values(),
+    ]:
         assert np.isfinite(values).all()
