@@ -47,20 +47,28 @@ class SIMUEnvironment(Environment):
 class SIMUCoreConfig(CoreConfig):
 
     def produce_external_covmats(self, covmat_paths=None):
-        """Read external matrices separately from the dataset inputs covariance.
+        """Read external covmats separately from the dataset inputs covariance.
 
-        Files use NNPDF's three-level row and column headers and must already
-        match the dataset order and cuts used for the POPxf export.
+        Files use NNPDF's three-level row and column headers. Match contributions
+        by dataset and point ID, independently of their metadata group labels.
         """
-        matrices = []
+        covmats = []
         for path in covmat_paths or []:
             path = Path(path)
             if not path.exists():
                 log.warning(f"Covariance matrix path {path} does not exist. Skipping.")
                 continue
-            frame = pd.read_csv(path, sep="\t", index_col=[0, 1, 2], header=[0, 1, 2])
-            matrices.append(frame.to_numpy(dtype=float))
-        return matrices
+            covmat = pd.read_csv(path, sep="\t", index_col=[0, 1, 2], header=[0, 1, 2])
+            covmat.index = pd.MultiIndex.from_tuples(
+                [(dataset, int(point)) for _, dataset, point in covmat.index],
+                names=["dataset", "id"],
+            )
+            covmat.columns = pd.MultiIndex.from_tuples(
+                [(dataset, int(point)) for _, dataset, point in covmat.columns],
+                names=["dataset", "id"],
+            )
+            covmats.append(covmat.astype(float))
+        return covmats
 
     @property
     def loader(self):

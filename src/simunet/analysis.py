@@ -225,19 +225,11 @@ def plot_nd_bsm_facs_fits(
 
 
 def simu_fac_to_popxf(
-    data,
-    pdf,
-    dataset_inputs_covariance_matrix,
-    simunet_one_or_more_results,
-    external_covmats,
-    data_index,
+    data, pdf, groups_covmat_no_table, simunet_one_or_more_results, external_covmats
 ):
     "This function produces a popxf file with the BSM factors for each dataset"
     written = []
-    cov = dataset_inputs_covariance_matrix.copy()
-    for extra_covmat in external_covmats:
-        cov += extra_covmat
-    cov = pd.DataFrame(cov, index=data_index, columns=data_index)
+    cov = groups_covmat_no_table
 
     for data_input, dataset in zip(data, data.datasets):
         log.info(f"Processing dataset {dataset.name} for popxf generation.")
@@ -292,11 +284,17 @@ def simu_fac_to_popxf(
 
         cd = dataset.commondata.load().get_cv()[cuts]
         central_value = cd - SM_predictions
-        dataset_cov = (
-            cov.xs(dataset_name, level="dataset", axis=0)
-            .xs(dataset_name, level="dataset", axis=1)
-            .to_numpy()
+        dataset_cov = cov.loc[(slice(None), dataset_name), (slice(None), dataset_name)].to_numpy(
+            copy=True
         )
+        for extra_covmat in external_covmats:
+            if dataset_name not in extra_covmat.index.get_level_values("dataset"):
+                continue
+            extra_dataset_cov = extra_covmat.xs(dataset_name, level="dataset", axis=0).xs(
+                dataset_name, level="dataset", axis=1
+            )
+            dataset_cov += extra_dataset_cov.loc[cuts, cuts].to_numpy()
+
         standard_deviation = np.sqrt(np.diag(dataset_cov))
         correlation = dataset_cov / np.outer(standard_deviation, standard_deviation)
 
