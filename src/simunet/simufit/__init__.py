@@ -14,7 +14,7 @@ original_init = Observable.__init__
 original_call = Observable.call
 
 # Define a simunet registry for keeping track of stuff we are injecting into validphys/n3fit
-_REGISTRY = {}
+_REGISTRY = {"simunet_active": False}
 
 
 def _patch_me_up():
@@ -59,6 +59,9 @@ def _patch_me_up():
         ret = original_monitor(self, training_info, epoch, print_stats=print_stats)
         if not ret:
             return False
+
+        if not _REGISTRY.get("simunet_active"):
+            return ret
 
         # Keep track of whether the best epoch changed
         if not hasattr(self, "simunet_best_epoch"):

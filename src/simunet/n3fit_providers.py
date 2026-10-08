@@ -12,7 +12,9 @@ from simunet import simufit
 # minimal changes are necessary if instead we need to propagate this to the fktable instead
 
 
-def fittable_datasets_masked(data, simu_layer=None, simu_parameters=None, analytic_initialisation=False):
+def fittable_datasets_masked(
+    data, simu_layer=None, simu_parameters=None, analytic_initialisation=False
+):
     """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
 
     ret = vanilla_fittable_datasets_masked(data)
@@ -27,6 +29,7 @@ def fittable_datasets_masked(data, simu_layer=None, simu_parameters=None, analyt
             pass
         simu_layer_generated = simu_layer(simu_parameters)
         simufit._REGISTRY["layer"] = simu_layer_generated
+        simufit._REGISTRY["simunet_active"] = True
     else:
         simu_layer_generated = simufit._REGISTRY["layer"]
 
