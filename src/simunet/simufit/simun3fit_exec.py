@@ -5,6 +5,7 @@ n3fit version of simunet
 import pandas as pd
 
 from n3fit.scripts.n3fit_exec import N3FIT_PROVIDERS, N3FitApp, N3FitConfig, N3FitEnvironment
+from reportengine.configparser import ConfigError
 
 # Import simufit to override the wrapper
 from simunet import simufit
@@ -19,7 +20,9 @@ class SimufitEnvironment(SIMUEnvironment, N3FitEnvironment):
 
 class SimufitConfig(SIMUConfig, N3FitConfig):
 
-    def produce_simu_layer(self, simu_parameters=None, freeze_pdf=False):
+    def produce_simu_layer(
+        self, simu_parameters=None, freeze_pdf=False, load=None, load_weights_from_fit=None
+    ):
         """
         Parses the simu_parameters dictionary and
         generates a function that produces
@@ -27,6 +30,11 @@ class SimufitConfig(SIMUConfig, N3FitConfig):
         """
         if simu_parameters is None:
             return None
+
+        if freeze_pdf and load is None and load_weights_from_fit is None:
+            raise ConfigError(
+                "freeze_pdf: true requires PDF weights via `load` or `load_weights_from_fit`"
+            )
 
         from simunet.simufit.combine_cfac import CombineCfacLayer
 
