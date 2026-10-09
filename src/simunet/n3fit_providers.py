@@ -137,6 +137,10 @@ def simu_parameters_analytic(
     Constructs the analytic initialisation for the simu_parameters if requested.
     """
     if analytic_initialisation:
+        if analytic_initialisation_pdf is None:
+            raise ValueError(
+                "analytic_initialisation_pdf must be provided when analytic_initialisation=True."
+            )
         return _construct_analytic_initialisation(
             data=data,
             analytic_initialisation_pdf=analytic_initialisation_pdf,
