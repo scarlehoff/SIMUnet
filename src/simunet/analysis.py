@@ -60,9 +60,7 @@ def load_datasets_contamination(data):
             bsm_dict[dataset.name] = np.ones(dataset.commondata.ndata)
         else:
             log.info(f"Loading {dataset.name}.")
-            with open(cont_path, "r+") as stream:
-                simu_card = yaml_safe.load(stream)
-            stream.close()
+            simu_card = l.load_simu_factors(cont_path)
 
             k_factors = np.zeros(len(cuts))
             for param in cont_params:
