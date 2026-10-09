@@ -1,0 +1,27 @@
+meta:
+  title: Example of simufac_to_popxf
+  keywords: [example]
+  author: Ella Cole
+
+pdf:
+  id: NNPDF40_nnlo_as_01180
+  label: NNPDF40_nnlo_as_01180
+
+theoryid: 40000000
+
+use_cuts: internal
+use_pdferr: True
+
+covmat_paths:
+  - tests/regression/popxf/ATLAS_Z0_7TEV_49FB_HIMASS_example.csv # This is an example which can be produced using the `simunet_generate_thcovmat` command
+
+dataset_inputs:
+  - {dataset: ATLAS_Z0_7TEV_49FB_HIMASS, cfac: ["QCD"], variant: "legacy", simu_fac: EFT_LO}
+
+template_text: |
+  {@ with dataset_inputs @}
+  {@simu_fac_to_popxf@}
+  {@ endwith @}
+
+actions_:
+  - report(main=true)
