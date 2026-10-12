@@ -1,5 +1,6 @@
 import importlib.resources
 import logging
+from functools import lru_cache
 from pathlib import Path
 
 from nnpdf_data.validphys_compatibility import new_to_legacy_map
@@ -78,12 +79,25 @@ class SIMUnetLoader(Loader):
                     f"The '{key}' key is not present in the SIMU file at {simufactorpath}."
                 )
 
-        # TODO: to ask, why can't we read here the file directly instead of doing it in the provider
         # assign to each operator name the same simufactorpath
         for simu_parameters_name in simu_parameters_names:
             simu_fac_names_paths[simu_parameters_name] = simufactorpath
 
         return simu_fac_names_paths
+
+    @staticmethod
+    @lru_cache(maxsize=None)
+    def load_simu_factors(simufactorpath):
+        """Load a SIMU YAML file once per path, across loader instances.
+
+        The returned mapping is shared and must be treated as read-only. The cache
+        lasts for the process lifetime; call ``load_simu_factors.cache_clear()``
+        to reload files after editing them in an interactive session.
+        """
+        with open(simufactorpath, "rb") as stream:
+            simu_info = yaml_safe.load(stream)
+
+        return simu_info
 
     def check_dataset(
         self,

@@ -8,6 +8,13 @@ from simunet.core import SIMUnetDataSetSpec
 from validphys.convolution import PredictionsRequireCutsError, central_predictions, predictions
 from validphys.core import PDF, DataGroupSpec
 from validphys.results import DataResult, ThPredictionsResult
+from reportengine.checks import remove_outer, require_one
+from validphys.convolution import PredictionsRequireCutsError, central_predictions, predictions
+
+import pandas as pd
+import numpy as np
+
+from collections.abc import Sequence
 
 
 class SIMUnetThPredictionsResult(ThPredictionsResult):
@@ -99,6 +106,9 @@ def simunet_one_or_more_results(
         return simu_results(
             dataset, pdf, covariance_matrix, sqrt_covmat, load_datasets_contamination
         )
-    return simu_pdf_results(
-        dataset, pdfs, covariance_matrix, sqrt_covmat, load_datasets_contamination
+    raise NotImplementedError(
+        "Not yet implemented for SIMUnet, only single PDF results are currently supported."
     )
+    # return simu_pdf_results(
+    #     dataset, pdfs, covariance_matrix, sqrt_covmat, load_datasets_contamination
+    # )
