@@ -1,0 +1,7 @@
+# NNPDF revision used to reproduce the stored reference outputs.
+nnpdf @ git+https://github.com/NNPDF/nnpdf.git@f4cbc24e21c20b12cb3d85c766bb2b8bdaef4dd3
+numpy==2.2.6
+scipy==1.17.1
+pandas==3.0.1
+reportengine==0.32
+pineappl==1.3.3
