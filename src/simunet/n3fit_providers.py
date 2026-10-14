@@ -2,19 +2,18 @@
 Contains the providers that n3fit will use and that we want to override
 """
 
+import logging
+
 import numpy as np
 import pandas as pd
+import scipy as sp
 
 from simunet import simufit
+from simunet.loader import SIMUnetLoader
+from simunet.results import SIMUnetThPredictionsResult
 from validphys.coredata import FKTableData
 from validphys.covmats import dataset_t0_predictions as validphys_dataset_t0_predictions
 from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
-from simunet import simufit
-from simunet.results import SIMUnetThPredictionsResult
-import scipy as sp
-
-from simunet.loader import SIMUnetLoader
-import logging
 
 l = SIMUnetLoader()
 log = logging.getLogger(__name__)
@@ -132,7 +131,7 @@ def simu_parameters_analytic(
     data,
     make_replica,
     groups_covmat,
-    simu_parameters,
+    simu_parameters=None,
     analytic_initialisation_pdf=None,
     analytic_initialisation=False,
     use_th_covmat=False,
@@ -195,9 +194,7 @@ def dataset_t0_predictions(t0dataset, t0set):
         ) from e
 
 
-def fittable_datasets_masked(
-    data, simu_layer=None, simu_parameters=None, analytic_initialisation=False
-):
+def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=None):
     """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
 
     ret = vanilla_fittable_datasets_masked(data)
