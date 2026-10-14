@@ -196,6 +196,10 @@ def dataset_t0_predictions(t0dataset, t0set):
 
 def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=None):
     """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
+    """Note: for anayltic solution the data must be grouped together (default in simunet: ALL).
+    ``simu_parameters_analytic`` is just the raw ``simu_parameters`` namespace
+    when ``analytic_initialisation`` is not active
+    """
 
     ret = vanilla_fittable_datasets_masked(data)
     for dataset, fittable_dataset in zip(data.datasets, ret):
@@ -211,6 +215,7 @@ def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=Non
     if simufit._REGISTRY.get("layer") is None:
         simu_layer_generated = simu_layer(simu_parameters_analytic)
         simufit._REGISTRY["layer"] = simu_layer_generated
+        simufit._REGISTRY["simunet_active"] = True
     else:
         simu_layer_generated = simufit._REGISTRY["layer"]
 
