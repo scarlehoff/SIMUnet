@@ -18,6 +18,7 @@ requires-python = ">=3.9"
 [project.scripts]
 simunet = "simunet.app:main"
 simun3fit = "simunet.simufit.simun3fit_exec:main"
+simunet-setupfit = "simunet.simufit.simusetupfit_exec:main"
 simunet_generate_thcovmat = "simunet.theory_covmat_exe:main"
 
 [tool.setuptools.packages.find]

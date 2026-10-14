@@ -1,4 +1,11 @@
+from collections.abc import Sequence
+
+import numpy as np
+import pandas as pd
+
+from reportengine.checks import remove_outer, require_one
 from simunet.core import SIMUnetDataSetSpec
+from validphys.convolution import PredictionsRequireCutsError, central_predictions, predictions
 from validphys.core import PDF, DataGroupSpec
 from validphys.results import DataResult, ThPredictionsResult
 from reportengine.checks import remove_outer, require_one
@@ -32,10 +39,23 @@ class SIMUnetThPredictionsResult(ThPredictionsResult):
             datasets = (dataset,)
 
         try:
-            if central_only:
-                preds = [central_predictions(d, pdf) for d in datasets]
-            else:
-                preds = [predictions(d, pdf) for d in datasets]
+            preds = []
+            for d in datasets:
+                if getattr(d, "use_fixed_predictions", False):
+                    values = np.asarray(d.fixed_predictions, dtype=float)
+                    if d.cuts is not None:
+                        values = np.take(values, d.cuts.load())
+                    nmembers = 1 if central_only else pdf.get_members()
+                    preds.append(
+                        pd.DataFrame(
+                            np.tile(values[:, None], (1, nmembers)),
+                            index=pd.Index(range(len(values)), name="data"),
+                        )
+                    )
+                elif central_only:
+                    preds.append(central_predictions(d, pdf))
+                else:
+                    preds.append(predictions(d, pdf))
             th_predictions = pd.concat(preds)
             if load_dataset_contamination is not None:
                 th_predictions *= 1.0 + load_dataset_contamination[dataset.name][:, None]
