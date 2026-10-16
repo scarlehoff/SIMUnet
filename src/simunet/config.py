@@ -1,6 +1,9 @@
 from collections.abc import Mapping, Sequence
 import logging
 import numbers
+from pathlib import Path
+
+import pandas as pd
 
 from nnpdf_data import legacy_to_new_map
 from reportengine import report
@@ -43,9 +46,37 @@ class SIMUEnvironment(Environment):
 
 class SIMUCoreConfig(CoreConfig):
 
+    def produce_external_covmats(self, covmat_paths=None):
+        """Read external covmats separately from the dataset inputs covariance.
+
+        Files use NNPDF's three-level row and column headers. Match contributions
+        by dataset and point ID, independently of their metadata group labels.
+        """
+        covmats = []
+        for path in covmat_paths or []:
+            path = Path(path)
+            if not path.exists():
+                log.warning(f"Covariance matrix path {path} does not exist. Skipping.")
+                continue
+            covmat = pd.read_csv(path, sep="\t", index_col=[0, 1, 2], header=[0, 1, 2])
+            covmat.index = pd.MultiIndex.from_tuples(
+                [(dataset, int(point)) for _, dataset, point in covmat.index],
+                names=["dataset", "id"],
+            )
+            covmat.columns = pd.MultiIndex.from_tuples(
+                [(dataset, int(point)) for _, dataset, point in covmat.columns],
+                names=["dataset", "id"],
+            )
+            covmats.append(covmat.astype(float))
+        return covmats
+
     @property
     def loader(self):
         return self.environment.loader
+
+    def parse_analytic_initialisation_pdf(self, name, unpolarized_bc=None):
+        """PDF set used to compute the analytic initialisation."""
+        return self.parse_pdf(name, unpolarized_bc=unpolarized_bc)
 
     def produce_dataset(
         self,
@@ -179,14 +210,17 @@ class SIMUCoreConfig(CoreConfig):
         """Load the default grouping of data"""
         return "ALL"
 
-    def produce_bsm_names_to_latex(self, simu_parameters=None):
-        if simu_parameters is None:
+    def produce_bsm_names_to_latex(self, bsm_plot_settings=None):
+        """Map coefficient names to labels from analysis-only plotting settings."""
+        if bsm_plot_settings is None:
             return None
-        else:
-            bsm_names_to_latex = {}
-            for entry in simu_parameters:
-                bsm_names_to_latex[entry['name']] = entry['latex']
-            return bsm_names_to_latex
+        return {name: settings.get("latex", name) for name, settings in bsm_plot_settings.items()}
+
+    def produce_bsm_names_to_plot_scales(self, bsm_plot_settings=None):
+        """Map coefficient names to display multipliers, defaulting to one."""
+        if bsm_plot_settings is None:
+            return None
+        return {name: settings.get("plot_scale", 1) for name, settings in bsm_plot_settings.items()}
 
     @element_of("dataset_inputs")
     def parse_dataset_input(
@@ -289,6 +323,27 @@ class SIMUCoreConfig(CoreConfig):
             bsm_sector=bsm_sector,
             **bsm_data,
         )
+
+    def parse_posterior_plots_settings(self, settings):
+        """Parses posterior plot settings, filling in defaults for missing options.
+        Warns about unknown keys."""
+        known_keys = {"same_bins", "n_bins", "rangex", "rangey", "add_bounds", "exp_val_lines"}
+
+        kdiff = settings.keys() - known_keys
+        for k in kdiff:
+            log.warning(
+                ConfigError(f"Key '{k}' in posterior_plots_settings not known.", k, known_keys)
+            )
+
+        posterior_plots_settings = {
+            "same_bins": settings.get("same_bins", False),
+            "n_bins": settings.get("n_bins", 10),
+            "rangex": settings.get("rangex", None),
+            "rangey": settings.get("rangey", None),
+            "add_bounds": settings.get("add_bounds", False),
+            "exp_val_lines": settings.get("exp_val_lines", None),
+        }
+        return posterior_plots_settings
 
 
 class SIMUConfig(report.Config, SIMUCoreConfig):

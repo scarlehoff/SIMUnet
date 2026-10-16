@@ -1,0 +1,57 @@
+name: SIMU factors to POPxf regression
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: popxf-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  popxf-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      BROWSER: "true"
+      SIMUNET_TEST_CACHE: ${{ github.workspace }}/.cache/popxf
+      NNPDF_PROFILE_PATH: ${{ github.workspace }}/.cache/popxf/nnprofile.yaml
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: popxf-regression
+          environment-file: tests/ci/popxf-environment.yml
+          miniforge-version: latest
+          auto-activate-base: false
+      - name: Install pinned regression dependencies and this checkout
+        run: |
+          python -m pip install -r tests/ci/popxf-requirements.txt
+          python -m pip install -e ".[tests]"
+      - uses: actions/cache@v4
+        with:
+          path: .cache/popxf
+          key: popxf-inputs-${{ runner.os }}-${{ hashFiles('tests/ci/popxf-requirements.txt', 'tests/ci/popxf-environment.yml', 'tests/ci/prepare_popxf_resources.py', 'runcards/simufac_to_popxf.yaml') }}
+      - name: Prepare public PDF and theory resources
+        run: |
+          mkdir -p "$SIMUNET_TEST_CACHE/lhapdf"
+          export LHAPDF_DATA_PATH="$SIMUNET_TEST_CACHE/lhapdf:$CONDA_PREFIX/share/LHAPDF"
+          python tests/ci/prepare_popxf_resources.py
+      - name: Run real runcard and covariance regressions
+        run: |
+          export LHAPDF_DATA_PATH="$SIMUNET_TEST_CACHE/lhapdf:$CONDA_PREFIX/share/LHAPDF"
+          python -m pytest tests/test_popxf_regression.py -v --junitxml=popxf-results.xml
+      - name: Keep test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: popxf-test-results
+          path: popxf-results.xml
+          if-no-files-found: ignore

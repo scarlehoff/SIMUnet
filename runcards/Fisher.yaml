@@ -39,74 +39,111 @@ dataset_inputs:
  
 simu_parameters:
   # Dipoles
-#  - {name: 'OtZ', scale: 1, latex: '$c_{tZ}$', plot_scale: 1}
- - {name: 'OtW', scale: 1, latex: '$c_{tW}$', plot_scale: 10}
- - {name: 'OtG', scale: 1, latex: '$c_{tG}$', plot_scale: 10}
+#  - {name: 'OtZ', scale: 1}
+ - {name: 'OtW', scale: 1}
+ - {name: 'OtG', scale: 1}
 
-#  - {name: 'Opt', scale: 1, latex: '$c_{\varphi t}$', plot_scale: 0.1}
- - {name: 'O3pQ3', scale: 1, latex: '$c_{\varphi Q}^{(3)}$', plot_scale: 1}  
- - {name: 'O3pq', scale: 1, plot_scale: 10, latex: '$c_{\varphi q}^{(3)}$'} #BETA
-#  - {name: 'OpQM', scale: 1, latex: '$c_{\varphi Q}^{(-)}$', plot_scale: 1}
- - {name: 'OpqMi',  plot_scale: 1, scale: 1, latex: '$c_{\varphi q}^{(-)}$'} #BETA
- - {name: 'Opui', plot_scale: 1, scale: 1, latex: '$c_{\varphi u}$'} 
- - {name: 'Opdi', plot_scale: 1, scale: 1, latex: '$c_{\varphi d}$'} 
+#  - {name: 'Opt', scale: 1}
+ - {name: 'O3pQ3', scale: 1}  
+ - {name: 'O3pq', scale: 1} #BETA
+#  - {name: 'OpQM', scale: 1}
+ - {name: 'OpqMi', scale: 1} #BETA
+ - {name: 'Opui', scale: 1} 
+ - {name: 'Opdi', scale: 1} 
   # Lepton currents
- - {name: 'O3pl', plot_scale: 10, scale: 1, latex: '$c_{\varphi l}^{(3)}$'}
- - {name: 'Opl', plot_scale: 10, scale: 1, latex: '$c_{\varphi l}$'}
- - {name: 'Ope', plot_scale: 10, scale: 1, latex: '$c_{\varphi e}$'}
+ - {name: 'O3pl', scale: 1}
+ - {name: 'Opl', scale: 1}
+ - {name: 'Ope', scale: 1}
   # 4 Fermions 4Q
- - {name: 'O1qd', scale: 1, latex: '$c_{Qd}^{1}$', plot_scale: 0.1}
- - {name: 'O1qu', scale: 1, latex: '$c_{Qu}^{1}$', plot_scale: 0.1}
- - {name: 'O1dt', scale: 1, latex: '$c_{dt}^{1}$', plot_scale: 0.1}
- - {name: 'O1qt', scale: 1, latex: '$c_{qt}^{1}$', plot_scale: 0.1}
- - {name: 'O1ut', scale: 1, latex: '$c_{ut}^{1}$', plot_scale: 0.1}
- - {name: 'O11qq', scale: 1, latex: '$c_{Qq}^{1,1}$', plot_scale: 0.1}
- - {name: 'O13qq', scale: 1, latex: '$c_{Qq}^{1,3}$', plot_scale: 0.1}
- - {name: 'O8qd', scale: 1, latex: '$c_{Qd}^{8}$', plot_scale: 0.1}
- - {name: 'O8qu', scale: 1, latex: '$c_{Qu}^{8}$', plot_scale: 0.1}
- - {name: 'O8dt', scale: 1, latex: '$c_{dt}^{8}$', plot_scale: 0.1}
- - {name: 'O8qt', scale: 1, latex: '$c_{qt}^{8}$', plot_scale: 0.1}
- - {name: 'O8ut', scale: 1, latex: '$c_{ut}^{8}$', plot_scale: 0.1}
- - {name: 'O81qq', scale: 1, latex: '$c_{Qq}^{8,1}$', plot_scale: 0.1}
- - {name: 'O83qq', scale: 1, latex: '$c_{Qq}^{8,3}$', plot_scale: 0.1} 
-#  - {name: 'OQt8', scale: 1, plot_scale: 1, latex: '$c_{Qt}^{8}$'}
-#  - {name: 'OQQ1', scale: 1, plot_scale: 1, latex: '$c_{QQ}^{1}$'}
-#  - {name: 'OQQ8', scale: 1, plot_scale: 1, latex: '$c_{QQ}^{8}$'}
-#  - {name: 'OQt1', scale: 1, plot_scale: 1, latex: '$c_{Qt}^{1}$'}
-#  - {name: 'Ott1', scale: 1, plot_scale: 1, latex: '$c_{tt}^{1}$'}
+ - {name: 'O1qd', scale: 1}
+ - {name: 'O1qu', scale: 1}
+ - {name: 'O1dt', scale: 1}
+ - {name: 'O1qt', scale: 1}
+ - {name: 'O1ut', scale: 1}
+ - {name: 'O11qq', scale: 1}
+ - {name: 'O13qq', scale: 1}
+ - {name: 'O8qd', scale: 1}
+ - {name: 'O8qu', scale: 1}
+ - {name: 'O8dt', scale: 1}
+ - {name: 'O8qt', scale: 1}
+ - {name: 'O8ut', scale: 1}
+ - {name: 'O81qq', scale: 1}
+ - {name: 'O83qq', scale: 1} 
+#  - {name: 'OQt8', scale: 1}
+#  - {name: 'OQQ1', scale: 1}
+#  - {name: 'OQQ8', scale: 1}
+#  - {name: 'OQt1', scale: 1}
+#  - {name: 'Ott1', scale: 1}
 
- - {name: 'Oeu', scale: 1, plot_scale: 1, latex: '$c_{eu}$'}
- - {name: 'Olu', scale: 1, plot_scale: 1, latex: '$c_{lu}$'}
- - {name: 'Oed', scale: 1, plot_scale: 1, latex: '$c_{ed}$'}
- - {name: 'Olq3', scale: 1, plot_scale: 10, latex: '$c_{lq}^{(3)}$'}
- - {name: 'Olq1', scale: 1, plot_scale: 10, latex: '$c_{lq}^{(1)}$'}
- - {name: 'Oqe', scale: 1, plot_scale: 1, latex: '$c_{qe}$'}
- - {name: 'Old', scale: 1, plot_scale: 1, latex: '$c_{ld}$'}
+ - {name: 'Oeu', scale: 1}
+ - {name: 'Olu', scale: 1}
+ - {name: 'Oed', scale: 1}
+ - {name: 'Olq3', scale: 1}
+ - {name: 'Olq1', scale: 1}
+ - {name: 'Oqe', scale: 1}
+ - {name: 'Old', scale: 1}
   # 4 Fermions 4L
- - {name: 'Oll', scale: 1, plot_scale: 10, latex: '$c_{ll}$'}
+ - {name: 'Oll', scale: 1}
   # Yukawa
-#  - {name: 'Omup', scale: 1, plot_scale: 10, latex: '$c_{\mu \varphi}$'}
-#  - {name: 'Otap', scale: 1, plot_scale: 10, latex: '$c_{\tau \varphi}$'}
-#  - {name: 'Otp', scale: 1, plot_scale: 0.1, latex: '$c_{t \varphi}$'}
-#  - {name: 'Obp', scale: 1, plot_scale: 10, latex: '$c_{b \varphi}$'}
-#  - {name: 'Ocp', scale: 1, plot_scale: 1, latex: '$c_{c \varphi}$'}
+#  - {name: 'Omup', scale: 1}
+#  - {name: 'Otap', scale: 1}
+#  - {name: 'Otp', scale: 1}
+#  - {name: 'Obp', scale: 1}
+#  - {name: 'Ocp', scale: 1}
 
-#  - {name: 'OG', scale: 1, plot_scale: 1, latex: '$c_{G}$'}
-#  - {name: 'OWWW', scale: 1, plot_scale: 1, latex: '$c_{WWW}$'}
-#  - {name: 'OpG', scale: 1, plot_scale: 100, latex: '$c_{\varphi G}$'}
-#  - {name: 'OpW', scale: 1, plot_scale: 1, latex: '$c_{\varphi W}$'}
-#  - {name: 'OpB', scale: 1, plot_scale: 10, latex: '$c_{\varphi B}$'}
- - {name: 'OpWB', scale: 1, plot_scale: 100, latex: '$c_{\varphi W B}$'}
-#  - {name: 'Opd', scale: 1, plot_scale: 0.1, latex: '$c_{\varphi Box}$'}
- - {name: 'OpD', scale: 1, plot_scale: 10, latex: '$c_{\varphi D}$'}
+#  - {name: 'OG', scale: 1}
+#  - {name: 'OWWW', scale: 1}
+#  - {name: 'OpG', scale: 1}
+#  - {name: 'OpW', scale: 1}
+#  - {name: 'OpB', scale: 1}
+ - {name: 'OpWB', scale: 1}
+#  - {name: 'Opd', scale: 1}
+ - {name: 'OpD', scale: 1}
 # # New Beta
-#  - {name: 'Opud', scale: 1, plot_scale: 100, latex: '$c_{pud}$'}
-#  - {name: 'OulS', scale: 1, plot_scale: 100000, latex: '$c_{uls}$'}
-#  - {name: 'OulT', scale: 1, plot_scale: 10000, latex: '$c_{ulT}$'}
-#  - {name: 'OHq3', scale: 1, plot_scale: 10, latex: '$c_{Hq}^3$'}
-#  - {name: 'OHl3', scale: 1, plot_scale: 10, latex: '$c_{Hl}^3$'}
-#  - {name: 'Oll1', scale: 1, plot_scale: 10, latex: '$c_{ll}^1$'}
+#  - {name: 'Opud', scale: 1}
+#  - {name: 'OulS', scale: 1}
+#  - {name: 'OulT', scale: 1}
+#  - {name: 'OHq3', scale: 1}
+#  - {name: 'OHl3', scale: 1}
+#  - {name: 'Oll1', scale: 1}
 
+
+# Labels used to produce bsm_names_to_latex for the Fisher plots.
+bsm_plot_settings:
+  OtW: {latex: '$c_{tW}$', plot_scale: 10}
+  OtG: {latex: '$c_{tG}$', plot_scale: 10}
+  O3pQ3: {latex: '$c_{\varphi Q}^{(3)}$', plot_scale: 1}
+  O3pq: {latex: '$c_{\varphi q}^{(3)}$', plot_scale: 10}
+  OpqMi: {latex: '$c_{\varphi q}^{(-)}$', plot_scale: 1}
+  Opui: {latex: '$c_{\varphi u}$', plot_scale: 1}
+  Opdi: {latex: '$c_{\varphi d}$', plot_scale: 1}
+  O3pl: {latex: '$c_{\varphi l}^{(3)}$', plot_scale: 10}
+  Opl: {latex: '$c_{\varphi l}$', plot_scale: 10}
+  Ope: {latex: '$c_{\varphi e}$', plot_scale: 10}
+  O1qd: {latex: '$c_{Qd}^{1}$', plot_scale: 0.1}
+  O1qu: {latex: '$c_{Qu}^{1}$', plot_scale: 0.1}
+  O1dt: {latex: '$c_{dt}^{1}$', plot_scale: 0.1}
+  O1qt: {latex: '$c_{qt}^{1}$', plot_scale: 0.1}
+  O1ut: {latex: '$c_{ut}^{1}$', plot_scale: 0.1}
+  O11qq: {latex: '$c_{Qq}^{1,1}$', plot_scale: 0.1}
+  O13qq: {latex: '$c_{Qq}^{1,3}$', plot_scale: 0.1}
+  O8qd: {latex: '$c_{Qd}^{8}$', plot_scale: 0.1}
+  O8qu: {latex: '$c_{Qu}^{8}$', plot_scale: 0.1}
+  O8dt: {latex: '$c_{dt}^{8}$', plot_scale: 0.1}
+  O8qt: {latex: '$c_{qt}^{8}$', plot_scale: 0.1}
+  O8ut: {latex: '$c_{ut}^{8}$', plot_scale: 0.1}
+  O81qq: {latex: '$c_{Qq}^{8,1}$', plot_scale: 0.1}
+  O83qq: {latex: '$c_{Qq}^{8,3}$', plot_scale: 0.1}
+  Oeu: {latex: '$c_{eu}$', plot_scale: 1}
+  Olu: {latex: '$c_{lu}$', plot_scale: 1}
+  Oed: {latex: '$c_{ed}$', plot_scale: 1}
+  Olq3: {latex: '$c_{lq}^{(3)}$', plot_scale: 10}
+  Olq1: {latex: '$c_{lq}^{(1)}$', plot_scale: 10}
+  Oqe: {latex: '$c_{qe}$', plot_scale: 1}
+  Old: {latex: '$c_{ld}$', plot_scale: 1}
+  Oll: {latex: '$c_{ll}$', plot_scale: 10}
+  OpWB: {latex: '$c_{\varphi W B}$', plot_scale: 100}
+  OpD: {latex: '$c_{\varphi D}$', plot_scale: 10}
 
 theoryid: 40000000
 

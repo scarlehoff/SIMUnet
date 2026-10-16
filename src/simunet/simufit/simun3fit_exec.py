@@ -2,7 +2,7 @@
 n3fit version of simunet
 """
 
-import json
+import pandas as pd
 
 from n3fit.scripts.n3fit_exec import N3FIT_PROVIDERS, N3FitApp, N3FitConfig, N3FitEnvironment
 
@@ -22,7 +22,7 @@ class SimufitConfig(SIMUConfig, N3FitConfig):
     def produce_simu_layer(self, simu_parameters=None, freeze_pdf=False):
         """
         Parses the simu_parameters dictionary and
-        generates a function that produces 
+        generates a function that produces
         the simunet layer that will be applied to all obserables.
         """
         if simu_parameters is None:
@@ -53,15 +53,15 @@ class SimunfitApp(N3FitApp):
         # TODO: for multireplica, need to loop over replicas
         # instead of just taking the first one
         ret = {i.name: (w / s).tolist() for i, w, s in zip(layer.weights, weights, layer.scales)}
+        bsm_fac_df = pd.DataFrame(ret)
 
         simu_path = (
             self.environment.replica_path
             / f"replica_{self.environment.replicas[0]}"
-            / "simuweight.json"
+            / "bsm_fac.csv"
         )
         with simu_path.open("w") as f:
-            json.dump(ret, f)
-            f.write("\n")
+            bsm_fac_df.to_csv(f)
 
 
 def main():

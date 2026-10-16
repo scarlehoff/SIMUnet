@@ -1,0 +1,101 @@
+meta:
+  title: BSM Plots
+  keywords: [example]
+  author: Ella Cole
+
+fit: 231120_lm_fixedPDF_alldata
+fits:
+  - 231120_lm_fixedPDF_alldata
+
+use_cuts: fromfit
+pdf: {id: 231120_lm_fixedPDF_alldata, label: 231120_lm_fixedPDF_alldata}
+
+bsm_plot_settings:
+  # Dipoles
+  OtZ: {latex: '$c_{tZ}$', plot_scale: 1}
+  OtW: {latex: '$c_{tW}$', plot_scale: 100}
+  OtG: {latex: '$c_{tG}$', plot_scale: 100}
+ # Quark Currents
+  Opt: {latex: '$c_{\varphi t}$', plot_scale: 1}
+  O3pQ3: {latex: '$c_{\varphi Q}^{(3)}$', plot_scale: 10}
+  O3pq: {plot_scale: 1, latex: '$c_{\varphi q}^{(3)}$'}
+  OpQM: {latex: '$c_{\varphi Q}^{(-)}$', plot_scale: 1}
+  OpqMi: {plot_scale: 1, latex: '$c_{\varphi q}^{(-)}$'}
+  Opui: {plot_scale: 1, latex: '$c_{\varphi u}$'}
+  Opdi: {plot_scale: 1, latex: '$c_{\varphi d}$'}
+  # Lepton currents
+  O3pl: {plot_scale: 1, latex: '$c_{\varphi l}^{(3)}$'}
+  Opl: {plot_scale: 1, latex: '$c_{\varphi l}$'}
+  Ope: {plot_scale: 1, latex: '$c_{\varphi e}$'}
+  # 4 Fermions 4Q
+  O1qd: {latex: '$c_{Qd}^{1}$', plot_scale: 1}
+  O1qu: {latex: '$c_{Qu}^{1}$', plot_scale: 1}
+  O1dt: {latex: '$c_{dt}^{1}$', plot_scale: 1}
+  O1qt: {latex: '$c_{qt}^{1}$', plot_scale: 1}
+  O1ut: {latex: '$c_{ut}^{1}$', plot_scale: 1}
+  O11qq: {latex: '$c_{Qq}^{1,1}$', plot_scale: 1}
+  O13qq: {latex: '$c_{Qq}^{1,3}$', plot_scale: 100}
+  O8qd: {latex: '$c_{Qd}^{8}$', plot_scale: 1}
+  O8qu: {latex: '$c_{Qu}^{8}$', plot_scale: 1}
+  O8dt: {latex: '$c_{dt}^{8}$', plot_scale: 1}
+  O8qt: {latex: '$c_{qt}^{8}$', plot_scale: 1}
+  O8ut: {latex: '$c_{ut}^{8}$', plot_scale: 1}
+  O81qq: {latex: '$c_{Qq}^{8,1}$', plot_scale: 1}
+  O83qq: {latex: '$c_{Qq}^{8,3}$', plot_scale: 1}
+  # 4 Fermions 4HeavyQ
+  OQt8: {plot_scale: 1, latex: '$c_{Qt}^{8}$'}
+  OQQ1: {plot_scale: 1, latex: '$c_{QQ}^{1}$'}
+  OQQ8: {plot_scale: 1, latex: '$c_{QQ}^{8}$'}
+  OQt1: {plot_scale: 1, latex: '$c_{Qt}^{1}$'}
+  Ott1: {plot_scale: 1, latex: '$c_{tt}^{1}$'}
+  # 4 Fermions 2L2Q
+  Oeu: {plot_scale: 1, latex: '$c_{eu}$'}
+  Olu: {plot_scale: 1, latex: '$c_{lu}$'}
+  Oed: {plot_scale: 1, latex: '$c_{ed}$'}
+  Olq3: {plot_scale: 1, latex: '$c_{lq}^{(3)}$'}
+  Olq1: {plot_scale: 1, latex: '$c_{lq}^{(1)}$'}
+  Oqe: {plot_scale: 1, latex: '$c_{qe}$'}
+  Old: {plot_scale: 1, latex: '$c_{ld}$'}
+  # 4 Fermions 4L
+  Oll: {plot_scale: 1, latex: '$c_{ll}$'}
+  # Yukawa
+  Omup: {plot_scale: 1, latex: '$c_{\mu \varphi}$'}
+  Otap: {plot_scale: 1, latex: '$c_{\tau \varphi}$'}
+  Otp: {plot_scale: 1, latex: '$c_{t \varphi}$'}
+  Obp: {plot_scale: 1, latex: '$c_{b \varphi}$'}
+  Ocp: {plot_scale: 1, latex: '$c_{c \varphi}$'}
+  # Bosonic
+  OG: {plot_scale: 1, latex: '$c_{G}$'}
+  OWWW: {plot_scale: 1, latex: '$c_{WWW}$'}
+  OpG: {plot_scale: 1, latex: '$c_{\varphi G}$'}
+  OpW: {plot_scale: 1, latex: '$c_{\varphi W}$'}
+  OpB: {plot_scale: 1, latex: '$c_{\varphi B}$'}
+  OpWB: {plot_scale: 1, latex: '$c_{\varphi W B}$'}
+  Opd: {plot_scale: 1, latex: '$c_{\varphi Box}$'}
+  OpD: {plot_scale: 1, latex: '$c_{\varphi D}$'}
+
+
+posterior_plots_settings:
+  same_bins: True
+  n_bins: 15
+  exp_val_lines: SM # SM: all zero, CONT: from contamination_parameters values
+  # add_bounds: True
+  # rangex: [-0.5, 0.6]
+  # rangey: [0, 5]
+
+closuretest:
+  contamination_parameters:
+    - name: 'W'
+      value: 0.00008
+      linear_combination:
+          'Olq3': -15.94
+
+template_text: |
+
+ ### Comparison histograms of BSM factors
+  {@plot_nd_bsm_facs_fits@}
+
+
+
+actions_:
+  - report(main=True)

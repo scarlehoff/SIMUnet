@@ -2,23 +2,24 @@
 Contains the providers that n3fit will use and that we want to override
 """
 
-import numpy as np
+import logging
 
-from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
-from validphys.utils import yaml_safe
-from simunet import simufit
-from validphys.core import PDF
-from simunet.results import SIMUnetThPredictionsResult
+import numpy as np
+import pandas as pd
 import scipy as sp
 
+from simunet import simufit
 from simunet.loader import SIMUnetLoader
-import logging
+from simunet.results import SIMUnetThPredictionsResult
+from validphys.coredata import FKTableData
+from validphys.covmats import dataset_t0_predictions as validphys_dataset_t0_predictions
+from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
 
 l = SIMUnetLoader()
 log = logging.getLogger(__name__)
 
 
-def analytic_solution(data, theorySM, theorylin, covmat):
+def _analytic_solution(data, theorySM, theorylin, covmat):
     """
     Returns the minimum of the chi2 function:
 
@@ -27,8 +28,6 @@ def analytic_solution(data, theorySM, theorylin, covmat):
     """
 
     diff = data - theorySM
-
-    theorylin = theorylin
 
     part1 = np.linalg.solve(covmat, theorylin)
     part2 = np.linalg.solve(covmat, diff)
@@ -41,9 +40,8 @@ def analytic_solution(data, theorySM, theorylin, covmat):
     return (sol, minval)
 
 
-def construct_analytic_initialisation(
+def _construct_analytic_initialisation(
     data,
-    theoryid,
     analytic_initialisation_pdf,
     make_replica,
     groups_covmat,
@@ -53,47 +51,35 @@ def construct_analytic_initialisation(
     """
     Constructs the analytic initialisation for the simu_parameters.
     """
+    # TODO: Add in the ability to use contmainated data in the analytic initialisation
     sm_predictions = []
     linear_bsm = []
     th_covmat = []
     all_pred_replicas = []
     exp_data = make_replica
-    # TODO: Check that this changes with contamination
     nop = len(simu_parameters)
-    for ds in data:
-        dataset_spec = l.check_dataset(
-            name=ds.name,
-            theoryid=theoryid,
-            cfac=ds.cfac,
-            contamination=ds.contamination,
-            simu_parameters_names=ds.simu_parameters_names,
-            simu_parameters_linear_combinations=ds.simu_parameters_linear_combinations,
-            variant=ds.variant,
-        )
-        cuts = dataset_spec.cuts.load()
+    # Reuse the configured datasets so predictions retain the fit's cuts and ordering.
+    for ds in data.datasets:
+        cuts = ds.cuts.load()
         ndat = len(cuts)
         pred_values = SIMUnetThPredictionsResult.from_convolution(
-            PDF(analytic_initialisation_pdf), dataset_spec, load_dataset_contamination=None
-        ).error_members
-        central_value = pred_values[:, 0]
-        sm_predictions.append(central_value)  # Central Value
-        pred_replicas = pred_values[:, 1:]  # Replicas
+            analytic_initialisation_pdf, ds, load_dataset_contamination=None
+        )
+        central_value = pred_values.central_value
+        sm_predictions.append(central_value)
+        pred_replicas = pred_values.error_members
         all_pred_replicas.append(pred_replicas)
 
         if ds.simu_parameters_names is not None:
-            simu_dict = l.get_simu_parameters_name_dict(
-                ds.name, simu_parameters_names=ds.simu_parameters_names
-            )
-            simu_path = list(simu_dict.values())[0]
-            with open(simu_path, "rb") as stream:
-                simu_info = yaml_safe.load(stream)
+            simu_path = next(iter(ds.simu_parameters_names_CF.values()))
+            simu_info = l.load_simu_factors(simu_path)
             columns = []
             for param in ds.simu_parameters_linear_combinations:
                 model = "_".join(param.split("_")[:-1])
                 column = np.zeros((ndat,))
                 for key in ds.simu_parameters_linear_combinations[param]:
                     if key in simu_info[model].keys():
-                        model_values = [simu_info[model][key][i] for i in cuts]
+                        model_values = np.asarray(simu_info[model][key])[cuts]
                         column += np.array(
                             model_values * ds.simu_parameters_linear_combinations[param][key]
                         )
@@ -103,14 +89,20 @@ def construct_analytic_initialisation(
                 columns += [column]
             linear_bsm.append(np.array(columns).T)
 
-            if (
-                use_th_covmat == True
-                and "theory_cov" in simu_info.keys()
-                and len(simu_info["theory_cov"]) > 0
-            ):
-                th_covmat += [np.array(simu_info["theory_cov"])]
-            else:
-                th_covmat += [np.zeros((ndat, ndat))]
+            dataset_th_covmat = np.zeros((ndat, ndat))
+            if use_th_covmat:
+                stored_covmat = np.asarray(simu_info.get("theory_cov", []), dtype=float)
+                # YAML rows describe the covariance in the original data-point order.
+                # Empty placeholders ([[]], [[[[]]]], etc.) carry no uncertainty.
+                if stored_covmat.size:
+                    expected_shape = (ds.commondata.ndata, ds.commondata.ndata)
+                    if stored_covmat.shape != expected_shape:
+                        raise ValueError(
+                            f"{ds.name}: theory_cov in {simu_path} must have uncut shape "
+                            f"{expected_shape}, got {stored_covmat.shape}."
+                        )
+                    dataset_th_covmat = stored_covmat[np.ix_(cuts, cuts)]
+            th_covmat.append(dataset_th_covmat)
         else:
 
             linear_bsm.append(np.zeros((ndat, nop)))
@@ -125,8 +117,8 @@ def construct_analytic_initialisation(
     pdf_covmat = np.cov(pred_replicas_all_datasets)
     total_covmat = groups_covmat + th_covmat + pdf_covmat
 
-    sol, minval = analytic_solution(exp_data, sm_predictions, linear_bsm, total_covmat)
-    simu_parameters_scales = [1 / abs(ini) for ini in sol]
+    sol, minval = _analytic_solution(exp_data, sm_predictions, linear_bsm, total_covmat)
+    simu_parameters_scales = [1 / abs(ini) if ini != 0 else 1.0 for ini in sol]
     log.info("The analytic solution is " + str(sol))
     log.info("The minimum is achieved at chi2=" + str(minval))
     for param, scale, init in zip(simu_parameters, simu_parameters_scales, sol):
@@ -137,12 +129,10 @@ def construct_analytic_initialisation(
 
 def simu_parameters_analytic(
     data,
-    theoryid,
-    replica,
-    analytic_initialisation_pdf,
     make_replica,
     groups_covmat,
-    simu_parameters,
+    simu_parameters=None,
+    analytic_initialisation_pdf=None,
     analytic_initialisation=False,
     use_th_covmat=False,
 ):
@@ -150,13 +140,16 @@ def simu_parameters_analytic(
     Constructs the analytic initialisation for the simu_parameters if requested.
     """
     if analytic_initialisation:
-        return construct_analytic_initialisation(
-            data,
-            theoryid,
-            analytic_initialisation_pdf,
-            make_replica,
-            groups_covmat,
-            simu_parameters,
+        if analytic_initialisation_pdf is None:
+            raise ValueError(
+                "analytic_initialisation_pdf must be provided when analytic_initialisation=True."
+            )
+        return _construct_analytic_initialisation(
+            data=data,
+            analytic_initialisation_pdf=analytic_initialisation_pdf,
+            make_replica=make_replica,
+            groups_covmat=groups_covmat,
+            simu_parameters=simu_parameters,
             use_th_covmat=use_th_covmat,
         )
     return simu_parameters
@@ -165,11 +158,52 @@ def simu_parameters_analytic(
 # minimal changes are necessary if instead we need to propagate this to the fktable instead
 
 
+def _fixed_prediction_fkdata(fixed_predictions, hadronic):
+    """Create a 'fake' FKTableData when fixed_predictions are in use."""
+    ndata = len(fixed_predictions)
+    if hadronic:
+        index = pd.MultiIndex.from_product([range(ndata), [0], [0]], names=["data", "x1", "x2"])
+    else:
+        index = pd.MultiIndex.from_product([range(ndata), [0]], names=["data", "x"])
+
+    return FKTableData(
+        hadronic=hadronic,
+        Q0=1.0,
+        ndata=ndata,
+        xgrid=np.ones(1),
+        sigma=pd.DataFrame(0.0, index=index, columns=pd.Index([0], dtype=int)),
+        data_index=pd.Series(range(ndata), index=pd.Index(range(ndata), name="data")),
+        convolution_types=(),
+        metadata={"fixed_predictions": fixed_predictions},
+    )
+
+
+def dataset_t0_predictions(t0dataset, t0set):
+    """Override t0 predictions in the case of fixed_predictions."""
+    if getattr(t0dataset, "use_fixed_predictions", False):
+        values = np.take(t0dataset.fixed_predictions, t0dataset.cuts.load())
+        return values.reshape(-1)
+
+    try:
+        return validphys_dataset_t0_predictions(t0dataset, t0set)
+    except BaseException as e:
+        # If pineappl fails to find the FkTable it will throw an exception, give some possible explanation
+        raise ValueError(
+            f"Not able to load the FkTables for {t0dataset}. Perhaps ``use_fixed_predictions`` is needed?"
+        ) from e
+
+
 def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=None):
-    # TODO: Looks at use_th_covmat
     """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
 
     ret = vanilla_fittable_datasets_masked(data)
+    for dataset, fittable_dataset in zip(data.datasets, ret):
+        if getattr(dataset, "use_fixed_predictions", False):
+            fixed_predictions = np.take(dataset.fixed_predictions, dataset.cuts.load())
+            # In normal NNPDF, whether a dataset is DIS or hadronic is given by the fktable
+            hadronic = not str(dataset.commondata.process_type).startswith("DIS")
+            fittable_dataset.fktables_data = [_fixed_prediction_fkdata(fixed_predictions, hadronic)]
+
     if simu_layer is None:
         return ret
 
@@ -195,14 +229,13 @@ def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=Non
             # Nothing to do here
             continue
 
-        # Loop over the cfactors that have been parsed
+        # Load the SIMU file used to construct the BSM correction factors
         # TODO (will there be ever more than one? if so... how to deal with it?)
         cuts = dataset.cuts.load().tolist()
-        for cfac_file in dataset.simu_parameters_names_CF.values():
-            with open(cfac_file, "rb") as stream:
-                cfac_data = yaml_safe.load(stream)
+        for simu_path in dataset.simu_parameters_names_CF.values():
+            simu_info = l.load_simu_factors(simu_path)
 
-            cfactors_raw = simu_layer_generated.apply_linear_comb(cfac_data[data_input.simu_fac])
+            cfactors_raw = simu_layer_generated.apply_linear_comb(simu_info[data_input.simu_fac])
             cfactors = [np.take(i, indices=cuts, mode="clip") for i in cfactors_raw]
             break
 
