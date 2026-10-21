@@ -48,20 +48,23 @@ class SimunfitApp(N3FitApp):
     def run(self):
         """Save the simunet weights after the fit has run completely."""
         super().run()
-        weights = simufit._REGISTRY["best_weights"]
-        layer = simufit._REGISTRY["layer"]
-        # TODO: for multireplica, need to loop over replicas
-        # instead of just taking the first one
-        ret = {i.name: (w / s).tolist() for i, w, s in zip(layer.weights, weights, layer.scales)}
-        bsm_fac_df = pd.DataFrame(ret)
+        if simufit._REGISTRY["simunet_active"]:
+            weights = simufit._REGISTRY["best_weights"]
+            layer = simufit._REGISTRY["layer"]
+            # TODO: for multireplica, need to loop over replicas
+            # instead of just taking the first one
+            ret = {
+                i.name: (w / s).tolist() for i, w, s in zip(layer.weights, weights, layer.scales)
+            }
+            bsm_fac_df = pd.DataFrame(ret)
 
-        simu_path = (
-            self.environment.replica_path
-            / f"replica_{self.environment.replicas[0]}"
-            / "bsm_fac.csv"
-        )
-        with simu_path.open("w") as f:
-            bsm_fac_df.to_csv(f)
+            simu_path = (
+                self.environment.replica_path
+                / f"replica_{self.environment.replicas[0]}"
+                / "bsm_fac.csv"
+            )
+            with simu_path.open("w") as f:
+                bsm_fac_df.to_csv(f)
 
 
 def main():
