@@ -1,6 +1,5 @@
-import numpy as np
-
 from n3fit.backends import MetaLayer
+from simunet.smeft import parameter_responses
 
 
 def _choose_initializer(ini_dict):
@@ -23,18 +22,7 @@ class CombineCfacLayer(MetaLayer):
 
     def apply_linear_comb(self, cfactors=None):
         """Take all cfactors and returns a list of pre-computed values to call this function with."""
-        if cfactors is None:
-            return [0.0] * len(self._simu_parameters)
-
-        lin_comb = []
-        for parameter in self._simu_parameters:
-            linear_combination = parameter.get("linear_combination", {parameter["name"]: 1.0})
-            scale = parameter.get("scale", 1.0)
-            tmp = 0.0
-            for k, v in linear_combination.items():
-                tmp += np.array(cfactors.get(k, 0.0)) / np.array(cfactors["SM"]) * v
-            lin_comb.append(tmp / scale)
-        return lin_comb
+        return parameter_responses(self._simu_parameters, cfactors)
 
     @property
     def scales(self):
