@@ -6,12 +6,8 @@ from validphys.dataplots import check_normalize_to, plot_fancy
 import logging
 import numpy as np
 import os
-from validphys.fitdata import replica_paths
-from validphys.commondata import loaded_commondata_with_cuts
-from validphys.covmats import sqrt_covmat
 import json
 from pathlib import Path
-from simunet.fitdata import read_bsm_facs
 
 log = logging.getLogger(__name__)
 l = SIMUnetLoader()
@@ -221,6 +217,88 @@ def plot_nd_bsm_facs_fits(
                         label='Expected value',
                     )
                     ax.legend(fontsize=14)
+        yield fig
+
+
+@figuregen
+def plot_bsm_facs_bounds(
+    fits, read_bsm_facs_fits, bsm_names_to_latex, bsm_names_to_plot_scales=None
+):
+    """Compare BSM coefficient means and  95% bounds across fits.
+
+    Parameters
+    ----------
+    fits : NSList
+        List of FitSpec to be compared.
+    read_bsm_facs_fits : list of pandas.DataFrame
+        BSM factors for each fit, in the same order as fits.
+    bsm_names_to_latex : dict
+        Coefficient labels. Missing entries use the coefficient name.
+    bsm_names_to_plot_scales : dict, optional
+        Display multipliers for coefficients. Missing entries default to one.
+
+    Yields
+    ------
+    matplotlib.figure.Figure
+        Linear and symmetric logarithmic plots of the mean and mean ± two
+        standard deviations, matching the posterior plots.
+    """
+    plot_scales = bsm_names_to_plot_scales or {}
+    labels = bsm_names_to_latex or {}
+    # Preserve the coefficient order in the results, including operators present
+    # only in later fits.
+    all_ops = list(dict.fromkeys(op for df in read_bsm_facs_fits for op in df.columns))
+    unknown_ops = (set(labels) | set(plot_scales)) - set(all_ops)
+    if unknown_ops:
+        raise ValueError(
+            "bsm_plot_settings contains coefficients absent from the fit results: "
+            + ", ".join(sorted(unknown_ops))
+        )
+
+    summaries = []
+    for fit, bsm_facs_df in zip(fits, read_bsm_facs_fits):
+        values = bsm_facs_df.reindex(columns=all_ops).mul(
+            [plot_scales.get(op, 1) for op in all_ops], axis="columns"
+        )
+        summaries.append((fit, values.mean(), values.std(ddof=0)))
+
+    tick_labels = []
+    for op in all_ops:
+        label = labels.get(op, op)
+        plot_scale = plot_scales.get(op, 1)
+        if plot_scale != 1:
+            label = str(plot_scale) + r"$\cdot$" + label
+        tick_labels.append(label)
+
+    x_positions = np.arange(len(all_ops))
+    offsets = (np.arange(len(summaries)) - (len(summaries) - 1) / 2) * (
+        0.8 / max(len(summaries), 1)
+    )
+    for scale in ("linear", "symlog"):
+        fig, ax = plt.subplots(figsize=(10, 4))
+        ax.axhline(0, color="k", linestyle="--", alpha=0.3, label="SM")
+        for offset, (fit, means, stds) in zip(offsets, summaries):
+            ax.errorbar(
+                x_positions + offset,
+                means.to_numpy(),
+                yerr=2 * stds.to_numpy(),
+                fmt="o",
+                capsize=3,
+                linewidth=2,
+                label="95% CL " + fit.label,
+            )
+
+        ax.set_xticks(x_positions)
+        ax.set_xticklabels(tick_labels, rotation="vertical", fontsize=10)
+        ax.set_ylabel(r"$c_i / \Lambda^2$ [TeV$^{-2}$]", fontsize=10)
+        if scale == "symlog":
+            ax.set_yscale(scale, linthresh=0.1)
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda value, pos: f"{value:g}"))
+        else:
+            ax.set_yscale(scale)
+        ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15))
+        ax.grid(True)
+        ax.set_axisbelow(True)
         yield fig
 
 
