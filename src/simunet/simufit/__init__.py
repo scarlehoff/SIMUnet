@@ -64,10 +64,12 @@ def _patch_me_up():
 
     original_monitor = Stopping.monitor_chi2
     original_stopping_init = Stopping.__init__
+    original_restore_best_weights = Stopping._restore_best_weights
 
     def stopping_init_patch(self, *args, **kwargs):
         """Freezing the model must happen here if freezing is necessary."""
         original_stopping_init(self, *args, **kwargs)
+        self.simunet_best_weights = None
         if _REGISTRY.get("freeze", False):
             self._pdf_model.trainable = False
 
@@ -86,12 +88,20 @@ def _patch_me_up():
         # TODO: at the moment this is only working for single replicas
         # For multireplica fits simunet_best need to be a list and check the entire _best_epoch list
         # then in the cfactor layer, we'll need a weight per replica for the initialization to be ok
-        if self.simunet_best_epoch != self._best_epochs[0]:
+        if self._best_epochs[0] is None or self.simunet_best_epoch != self._best_epochs[0]:
             self.simunet_best_epoch = self._best_epochs[0]
-            _REGISTRY["best_weights"] = _REGISTRY["layer"].get_weights()
+            self.simunet_best_weights = _REGISTRY["layer"].get_weights()
+            _REGISTRY["best_weights"] = self.simunet_best_weights
 
         return ret
 
+    def restore_best_weights_patch(self):
+        original_restore_best_weights(self)
+        # The BSM layer is outside the PDF model restored by NNPDF.
+        if _REGISTRY.get("simunet_active") and self.simunet_best_weights is not None:
+            _REGISTRY["layer"].set_weights(self.simunet_best_weights)
+
+    Stopping._restore_best_weights = restore_best_weights_patch
     Stopping.monitor_chi2 = monitor_chi2_patch
     Stopping.__init__ = stopping_init_patch
 
