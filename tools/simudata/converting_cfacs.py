@@ -1,4 +1,6 @@
-
+"""
+This script copies the cfactor files from the source directory into the simunet package's data directory based on the name mapping provided in `data_maps.csv`.
+"""
 import csv
 import logging
 import shutil
@@ -10,10 +12,10 @@ from conversor import _autoname
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-CSV_FILE_PATH = Path("data_maps.csv")
-TARGET_DIR = Path("/Users/ellacole/codes/simunet/simunet_nnpdf/simudata/commondata")
+CSV_FILE_PATH = Path(__file__).with_name("data_maps.csv")
+TARGET_DIR = Path(__file__).resolve().parents[2] / "src/simunet/simudata/commondata"
 CFACTORS_DIR = Path("/Users/ellacole/miniconda3/envs/simunet_mac/share/NNPDF/data/theory_270/cfactor")
-NEW_CFAC_DIR = TARGET_DIR / "cfactors"
+NEW_CFAC_DIR = TARGET_DIR.parent / "cfactors"
 
 def _parse_cfactor_names(raw_value: str) -> List[str]:
     """Parses and cleans cfactor names from a raw string format."""
