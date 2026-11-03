@@ -3,9 +3,9 @@ n3fit version of simunet
 """
 
 import pandas as pd
+from reportengine.configparser import ConfigError
 
 from n3fit.scripts.n3fit_exec import N3FIT_PROVIDERS, N3FitApp, N3FitConfig, N3FitEnvironment
-from reportengine.configparser import ConfigError
 
 # Import simufit to override the wrapper
 from simunet import simufit
@@ -20,20 +20,54 @@ class SimufitEnvironment(SIMUEnvironment, N3FitEnvironment):
 
 class SimufitConfig(SIMUConfig, N3FitConfig):
 
-    def produce_simu_layer(
-        self, simu_parameters=None, freeze_pdf=False, load=None, load_weights_from_fit=None
+    def parse_frozen_pdf(
+        self,
+        name,
+        replicas,
+        freeze_pdf=False,
+        load=None,
+        load_weights_from_fit=None,
+        simu_parameters=None,
+        positivity=None,
+        integrability=None,
     ):
-        """
-        Parses the simu_parameters dictionary and
-        generates a function that produces
-        the simunet layer that will be applied to all obserables.
-        """
+        """Validate the frozen PDF configuration and select the matching replica."""
+        from simunet.simufit.frozen_pdf import FrozenPDFMember
+
+        if not freeze_pdf:
+            raise ConfigError("frozen_pdf requires freeze_pdf: true")
+        if load is not None or load_weights_from_fit is not None:
+            raise ConfigError("frozen_pdf cannot be combined with PDF weights")
+        if simu_parameters is None:
+            raise ConfigError("frozen_pdf requires simu_parameters")
+        if len(replicas) != 1:
+            raise ConfigError("frozen_pdf requires fitting one replica per invocation")
+        if (positivity or {}).get("posdatasets") or (integrability or {}).get("integdatasets"):
+            raise ConfigError("frozen_pdf does not support positivity or integrability penalties")
+        try:
+            frozen_pdf = FrozenPDFMember(self.parse_pdf(name), replicas[0])
+        except ValueError as error:
+            raise ConfigError(str(error)) from error
+
+        # The output writer needs the same member that supplies the fixed predictions.
+        simufit._REGISTRY["frozen_pdf"] = frozen_pdf
+        return frozen_pdf
+
+    def produce_simu_layer(
+        self,
+        simu_parameters=None,
+        freeze_pdf=False,
+        load=None,
+        load_weights_from_fit=None,
+        frozen_pdf=None,
+    ):
+        """Return the factory for the BSM correction layer."""
         if simu_parameters is None:
             return None
 
-        if freeze_pdf and load is None and load_weights_from_fit is None:
+        if freeze_pdf and frozen_pdf is None and load is None and load_weights_from_fit is None:
             raise ConfigError(
-                "freeze_pdf: true requires PDF weights via `load` or `load_weights_from_fit`"
+                "freeze_pdf: true requires frozen_pdf or PDF weights via `load` or `load_weights_from_fit`"
             )
 
         from simunet.simufit.combine_cfac import CombineCfacLayer
