@@ -1,7 +1,6 @@
 import importlib.resources
 import logging
 from functools import lru_cache
-from pathlib import Path
 
 from nnpdf_data.validphys_compatibility import new_to_legacy_map
 from validphys.core import CutsPolicy, TheoryIDSpec
@@ -16,11 +15,7 @@ log = logging.getLogger(__name__)
 class SIMUnetLoader(Loader):
     def __init__(self, profile=None):
         super().__init__(profile)
-        package_root: Path = importlib.resources.files("simunet")
-
-        project_root = package_root.parent.parent
-
-        simudata_path = project_root / "simudata"
+        simudata_path = importlib.resources.files("simunet") / "simudata"
         local_commondata_path = simudata_path / "commondata"
         if local_commondata_path.exists():
             self.commondata_folders = (local_commondata_path, *self.commondata_folders)
