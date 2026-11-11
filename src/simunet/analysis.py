@@ -6,19 +6,12 @@ from validphys.dataplots import check_normalize_to, plot_fancy
 import logging
 import numpy as np
 import os
-from validphys.fitdata import replica_paths
-from validphys.commondata import loaded_commondata_with_cuts
-from validphys.covmats import sqrt_covmat
 import json
 from pathlib import Path
-from simunet.fitdata import read_bsm_facs
-
 from reportengine.table import table
 from reportengine.figure import figure, figuregen
 from validphys.convolution import central_predictions
-
 import pandas as pd
-
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import matplotlib.colors as colors
@@ -95,15 +88,6 @@ def load_datasets_contamination(data):
             bsm_dict[dataset.name] = k_factors
 
     return bsm_dict
-
-
-@check_normalize_to
-@figuregen
-def plot_data_theory_contaminated(
-    simunet_one_or_more_results, commondata, cuts, normalize_to: (int, str, type(None)) = None
-):
-    """Plot contaminated data and theory, optionally normalized as in plot_fancy."""
-    return plot_fancy(simunet_one_or_more_results, commondata, cuts, normalize_to=normalize_to)
 
 
 @check_normalize_to
@@ -347,6 +331,7 @@ def simu_fac_to_popxf(
     log.info(f"Written popxf and pdfxf files for datasets: {', '.join(written)} to {pdf_dir}.")
 
     return
+
 
 def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
     """

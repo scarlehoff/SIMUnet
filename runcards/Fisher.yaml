@@ -1,168 +1,42 @@
 meta:
-  title: BSM results
+  title: Fisher information
   author: Ella Cole
-  keywords: [simunet, plots, validphys]
 
-# fit: 260421_ec_fixed_low_energy_HMDY
-# # fits: 
-# #   - {id: Reference_fit_new_scale, label: Reference fit}
-# #   - {id: Meson_BETA_PV_New_scale, label: Low Energy Fit}
-# #   - {id: Meson_BETA_PV_HMDY, label: Low Energy Fit + HMDY}
-
-
+pdf: CT18NNLO
+theoryid: 40000000
 use_cuts: internal
-pdf: {id: CT18NNLO, label: CT18NNLO}
-# # pdf: {id: Meson_BETA_PV_HMDY, label: Low Energy Fit + HMDY}
-# pdf: {id: 260421_ec_fixed_low_energy_HMDY, label: Low Energy + HMDY Fit}
 
 dataset_inputs:
-#
-- {dataset: ATLAS_Z0_8TEV_HIMASS_M-Y, frac: 0.75, variant: legacy, simu_fac: "EFT_LO", bsm_sector: "DY"}
-- {dataset: CMS_Z0_7TEV_DIMUON_2D, frac: 0.75, simu_fac: "EFT_LO", bsm_sector: "DY"}
-- {dataset: ATLAS_Z0_7TEV_49FB_HIMASS, frac: 0.75, variant: legacy, simu_fac: "EFT_LO", bsm_sector: "DY"}
+  - {dataset: ATLAS_Z0_7TEV_49FB_HIMASS, variant: legacy, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: ATLAS_Z0_8TEV_HIMASS_M-Y, variant: legacy, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: CMS_Z0_7TEV_DIMUON_2D, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: ATLAS_TTBAR_7TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: ATLAS_TTBAR_8TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: CMS_TTBAR_13TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: CMS_SINGLETOP_7TEV_TCHANNEL-XSEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
 
-- {dataset: ATLAS_TTBAR_7TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_TTBAR_8TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_TTBAR_8TEV_LJ_DIF_YT-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_TTBAR_8TEV_LJ_DIF_YTTBAR-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_TTBAR_5TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_TTBAR_7TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_TTBAR_8TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_TTBAR_8TEV_LJ_DIF_YTTBAR-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_TTBAR_13TEV_TOT_X-SEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_SINGLETOP_7TEV_T-Y-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_SINGLETOP_7TEV_TBAR-Y-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_SINGLETOP_8TEV_T-RAP-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: ATLAS_SINGLETOP_8TEV_TBAR-RAP-NORM, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-- {dataset: CMS_SINGLETOP_7TEV_TCHANNEL-XSEC, frac: 0.75, variant: legacy, simu_fac: "EFT_NLO", bsm_sector: "Top"}
-
- 
 simu_parameters:
-  # Dipoles
-#  - {name: 'OtZ', scale: 1}
- - {name: 'OtW', scale: 1}
- - {name: 'OtG', scale: 1}
+  - {name: Oeu, scale: 1}
+  - {name: OtG, scale: 1}
+  - {name: O3pq, scale: 1}
+  - {name: O3pl, scale: 1}
+  - {name: Oll, scale: 1}
 
-#  - {name: 'Opt', scale: 1}
- - {name: 'O3pQ3', scale: 1}  
- - {name: 'O3pq', scale: 1} #BETA
-#  - {name: 'OpQM', scale: 1}
- - {name: 'OpqMi', scale: 1} #BETA
- - {name: 'Opui', scale: 1} 
- - {name: 'Opdi', scale: 1} 
-  # Lepton currents
- - {name: 'O3pl', scale: 1}
- - {name: 'Opl', scale: 1}
- - {name: 'Ope', scale: 1}
-  # 4 Fermions 4Q
- - {name: 'O1qd', scale: 1}
- - {name: 'O1qu', scale: 1}
- - {name: 'O1dt', scale: 1}
- - {name: 'O1qt', scale: 1}
- - {name: 'O1ut', scale: 1}
- - {name: 'O11qq', scale: 1}
- - {name: 'O13qq', scale: 1}
- - {name: 'O8qd', scale: 1}
- - {name: 'O8qu', scale: 1}
- - {name: 'O8dt', scale: 1}
- - {name: 'O8qt', scale: 1}
- - {name: 'O8ut', scale: 1}
- - {name: 'O81qq', scale: 1}
- - {name: 'O83qq', scale: 1} 
-#  - {name: 'OQt8', scale: 1}
-#  - {name: 'OQQ1', scale: 1}
-#  - {name: 'OQQ8', scale: 1}
-#  - {name: 'OQt1', scale: 1}
-#  - {name: 'Ott1', scale: 1}
-
- - {name: 'Oeu', scale: 1}
- - {name: 'Olu', scale: 1}
- - {name: 'Oed', scale: 1}
- - {name: 'Olq3', scale: 1}
- - {name: 'Olq1', scale: 1}
- - {name: 'Oqe', scale: 1}
- - {name: 'Old', scale: 1}
-  # 4 Fermions 4L
- - {name: 'Oll', scale: 1}
-  # Yukawa
-#  - {name: 'Omup', scale: 1}
-#  - {name: 'Otap', scale: 1}
-#  - {name: 'Otp', scale: 1}
-#  - {name: 'Obp', scale: 1}
-#  - {name: 'Ocp', scale: 1}
-
-#  - {name: 'OG', scale: 1}
-#  - {name: 'OWWW', scale: 1}
-#  - {name: 'OpG', scale: 1}
-#  - {name: 'OpW', scale: 1}
-#  - {name: 'OpB', scale: 1}
- - {name: 'OpWB', scale: 1}
-#  - {name: 'Opd', scale: 1}
- - {name: 'OpD', scale: 1}
-# # New Beta
-#  - {name: 'Opud', scale: 1}
-#  - {name: 'OulS', scale: 1}
-#  - {name: 'OulT', scale: 1}
-#  - {name: 'OHq3', scale: 1}
-#  - {name: 'OHl3', scale: 1}
-#  - {name: 'Oll1', scale: 1}
-
-
-# Labels used to produce bsm_names_to_latex for the Fisher plots.
 bsm_plot_settings:
-  OtW: {latex: '$c_{tW}$', plot_scale: 10}
-  OtG: {latex: '$c_{tG}$', plot_scale: 10}
-  O3pQ3: {latex: '$c_{\varphi Q}^{(3)}$', plot_scale: 1}
-  O3pq: {latex: '$c_{\varphi q}^{(3)}$', plot_scale: 10}
-  OpqMi: {latex: '$c_{\varphi q}^{(-)}$', plot_scale: 1}
-  Opui: {latex: '$c_{\varphi u}$', plot_scale: 1}
-  Opdi: {latex: '$c_{\varphi d}$', plot_scale: 1}
-  O3pl: {latex: '$c_{\varphi l}^{(3)}$', plot_scale: 10}
-  Opl: {latex: '$c_{\varphi l}$', plot_scale: 10}
-  Ope: {latex: '$c_{\varphi e}$', plot_scale: 10}
-  O1qd: {latex: '$c_{Qd}^{1}$', plot_scale: 0.1}
-  O1qu: {latex: '$c_{Qu}^{1}$', plot_scale: 0.1}
-  O1dt: {latex: '$c_{dt}^{1}$', plot_scale: 0.1}
-  O1qt: {latex: '$c_{qt}^{1}$', plot_scale: 0.1}
-  O1ut: {latex: '$c_{ut}^{1}$', plot_scale: 0.1}
-  O11qq: {latex: '$c_{Qq}^{1,1}$', plot_scale: 0.1}
-  O13qq: {latex: '$c_{Qq}^{1,3}$', plot_scale: 0.1}
-  O8qd: {latex: '$c_{Qd}^{8}$', plot_scale: 0.1}
-  O8qu: {latex: '$c_{Qu}^{8}$', plot_scale: 0.1}
-  O8dt: {latex: '$c_{dt}^{8}$', plot_scale: 0.1}
-  O8qt: {latex: '$c_{qt}^{8}$', plot_scale: 0.1}
-  O8ut: {latex: '$c_{ut}^{8}$', plot_scale: 0.1}
-  O81qq: {latex: '$c_{Qq}^{8,1}$', plot_scale: 0.1}
-  O83qq: {latex: '$c_{Qq}^{8,3}$', plot_scale: 0.1}
-  Oeu: {latex: '$c_{eu}$', plot_scale: 1}
-  Olu: {latex: '$c_{lu}$', plot_scale: 1}
-  Oed: {latex: '$c_{ed}$', plot_scale: 1}
-  Olq3: {latex: '$c_{lq}^{(3)}$', plot_scale: 10}
-  Olq1: {latex: '$c_{lq}^{(1)}$', plot_scale: 10}
-  Oqe: {latex: '$c_{qe}$', plot_scale: 1}
-  Old: {latex: '$c_{ld}$', plot_scale: 1}
-  Oll: {latex: '$c_{ll}$', plot_scale: 10}
-  OpWB: {latex: '$c_{\varphi W B}$', plot_scale: 100}
-  OpD: {latex: '$c_{\varphi D}$', plot_scale: 10}
-
-theoryid: 40000000
-
+  O3pq: {latex: '$c_{\varphi q}^{(3)}$'}
+  O3pl: {latex: '$c_{\varphi l}^{(3)}$'}
+  Oll: {latex: '$c_{ll}$'}
+  Oeu: {latex: '$c_{eu}$'}
+  OtG: {latex: '$c_{tG}$'}
+  
 bsm_sectors_to_latex:
-  DY: "Drell-Yan"
-  EWPO: "EWPO"
-  Higgs: "Higgs"
-  DIBOS: "DIBOS"
-  Top: "Top"
-
+  DY: Drell-Yan
+  Top: Top
 
 template_text: |
- ### Fisher Information
- {@fisher_information_matrix@}
-
- ### Fisher Information by Sector for full dataset
- {@plot_fisher_information_by_sector@}
-
-
+  # Fisher information
+  {@fisher_information_matrix@}
+  {@plot_fisher_information_by_sector@}
 
 actions_:
   - report(main=True)
