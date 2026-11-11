@@ -154,7 +154,6 @@ def simu_parameters_analytic(
         )
     return simu_parameters
 
-
 # I'm assuming the information necessary is in the data and needs to be propagated to the fittable dataset
 # minimal changes are necessary if instead we need to propagate this to the fktable instead
 

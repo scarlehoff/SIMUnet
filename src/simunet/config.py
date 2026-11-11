@@ -101,6 +101,7 @@ class SIMUCoreConfig(CoreConfig):
         simu_parameters_names = dataset_input.simu_parameters_names
         simu_parameters_linear_combinations = dataset_input.simu_parameters_linear_combinations
         use_fixed_predictions = dataset_input.use_fixed_predictions
+        bsm_sector = dataset_input.bsm_sector
         contamination = dataset_input.contamination
         contamination_data = contamination_data
 
@@ -120,6 +121,7 @@ class SIMUCoreConfig(CoreConfig):
                 use_fixed_predictions=use_fixed_predictions,
                 contamination=contamination,
                 contamination_data=contamination_data,
+                bsm_sector=bsm_sector
             )
         except DataNotFoundError as e:
             raise ConfigError(str(e), name, self.loader.available_datasets)
@@ -241,6 +243,7 @@ class SIMUCoreConfig(CoreConfig):
             "simu_fac",
             "use_fixed_predictions",
             "contamination",
+            "bsm_sector",
         }
         try:
             name = dataset["dataset"]
@@ -306,6 +309,7 @@ class SIMUCoreConfig(CoreConfig):
             simu_fac, simu_parameters, simu_parameters_names, simu_parameters_linear_combinations
         )
 
+        bsm_sector = str(dataset.get("bsm_sector", None))
         return SIMUnetDataSetInput(
             name=name,
             cfac=cfac,
@@ -316,6 +320,7 @@ class SIMUCoreConfig(CoreConfig):
             use_fixed_predictions=use_fixed_predictions,
             contamination=contamination,
             simu_fac=simu_fac,
+            bsm_sector=bsm_sector,
             **bsm_data,
         )
 

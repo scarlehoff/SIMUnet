@@ -1,0 +1,42 @@
+meta:
+  title: Fisher information
+  author: Ella Cole
+
+pdf: CT18NNLO
+theoryid: 40000000
+use_cuts: internal
+
+dataset_inputs:
+  - {dataset: ATLAS_Z0_7TEV_49FB_HIMASS, variant: legacy, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: ATLAS_Z0_8TEV_HIMASS_M-Y, variant: legacy, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: CMS_Z0_7TEV_DIMUON_2D, simu_fac: EFT_LO, bsm_sector: DY}
+  - {dataset: ATLAS_TTBAR_7TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: ATLAS_TTBAR_8TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: CMS_TTBAR_13TEV_TOT_X-SEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+  - {dataset: CMS_SINGLETOP_7TEV_TCHANNEL-XSEC, variant: legacy, simu_fac: EFT_NLO, bsm_sector: Top}
+
+simu_parameters:
+  - {name: Oeu, scale: 1}
+  - {name: OtG, scale: 1}
+  - {name: O3pq, scale: 1}
+  - {name: O3pl, scale: 1}
+  - {name: Oll, scale: 1}
+
+bsm_plot_settings:
+  O3pq: {latex: '$c_{\varphi q}^{(3)}$'}
+  O3pl: {latex: '$c_{\varphi l}^{(3)}$'}
+  Oll: {latex: '$c_{ll}$'}
+  Oeu: {latex: '$c_{eu}$'}
+  OtG: {latex: '$c_{tG}$'}
+  
+bsm_sectors_to_latex:
+  DY: Drell-Yan
+  Top: Top
+
+template_text: |
+  # Fisher information
+  {@fisher_information_matrix@}
+  {@plot_fisher_information_by_sector@}
+
+actions_:
+  - report(main=True)

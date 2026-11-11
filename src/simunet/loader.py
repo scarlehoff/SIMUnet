@@ -113,6 +113,7 @@ class SIMUnetLoader(Loader):
         contamination=None,
         contamination_data=None,
         variant=None,
+        bsm_sector=None
     ):
         if not isinstance(theoryid, TheoryIDSpec):
             theoryid = self.check_theoryID(theoryid)
@@ -168,6 +169,7 @@ class SIMUnetLoader(Loader):
             fixed_predictions=fixed_predictions,
             contamination=contamination,
             contamination_data=contamination_data,
+            bsm_sector=bsm_sector
         )
 
 
