@@ -25,6 +25,11 @@ The documentation is available at the official [SIMUnet website](https://hep-pbs
 
 See the [SIMUnet installation tutorial](https://hep-pbsp.github.io/SIMUnet/sphinx/build/html/tutorials/Installation.html).
 
+SIMUnet includes its commondata, SIMU factors, C-factors, and dataset mapping in
+regular and editable installations. These resources live in
+`src/simunet/simudata/`. Data conversion utilities for maintainers live
+in `tools/simudata/` and are not installed with the package.
+
 ## Cite
 
 The SIMUnet code has been developed in [the original paper](https://inspirehep.net/literature/2013000):

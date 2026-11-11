@@ -23,6 +23,10 @@ simunet_generate_thcovmat = "simunet.theory_covmat_exe:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+simunet = ["simudata/**/*"]
 
 [tool.black]
 line-length = 100
