@@ -10,6 +10,7 @@ import numpy as np
 
 from n3fit.backends import operations as op
 from n3fit.backends.keras_backend.MetaModel import MetaModel
+from n3fit.io.writer import WriterWrapper
 from n3fit.layers.observable import Observable
 from n3fit.stopping import Stopping
 
@@ -104,6 +105,19 @@ def _patch_me_up():
     Stopping._restore_best_weights = restore_best_weights_patch
     Stopping.monitor_chi2 = monitor_chi2_patch
     Stopping.__init__ = stopping_init_patch
+
+    original_write_data = WriterWrapper.write_data
+
+    def write_data_patch(self, save_path, fitname, weights_name):
+        """Export the frozen LHAPDF instead of the internal placeholder network."""
+        frozen_pdf = _REGISTRY.get("frozen_pdf")
+        if frozen_pdf is None:
+            return original_write_data(self, save_path, fitname, weights_name)
+        from simunet.simufit.frozen_pdf import write_frozen_pdf_fit
+
+        return write_frozen_pdf_fit(self, save_path, fitname, frozen_pdf)
+
+    WriterWrapper.write_data = write_data_patch
 
     _REGISTRY["patched"] = True
 

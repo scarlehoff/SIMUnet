@@ -11,6 +11,7 @@ import scipy as sp
 from simunet import simufit
 from simunet.loader import SIMUnetLoader
 from simunet.results import SIMUnetThPredictionsResult
+from validphys.convolution import central_predictions
 from validphys.coredata import FKTableData
 from validphys.covmats import dataset_t0_predictions as validphys_dataset_t0_predictions
 from validphys.n3fit_data import fittable_datasets_masked as vanilla_fittable_datasets_masked
@@ -155,8 +156,27 @@ def simu_parameters_analytic(
     return simu_parameters
 
 
-# I'm assuming the information necessary is in the data and needs to be propagated to the fittable dataset
-# minimal changes are necessary if instead we need to propagate this to the fktable instead
+def fixed_dataset_predictions(dataset, frozen_pdf=None):
+    """Return a fixed-PDF dataset prediciton, either from the fixed predicitons stored
+    in the corresponding SIMU fac file or produced using the `frozen_pdf` LHAPDF,
+    return None if neither is available.
+    Explicit stored predictions take precedence over the frozen LHAPDF baseline.
+    """
+    if getattr(dataset, "use_fixed_predictions", False):
+        values = np.asarray(dataset.fixed_predictions, dtype=float)
+        if dataset.cuts is not None:
+            values = values[dataset.cuts.load()]
+    elif frozen_pdf is not None:
+        # FrozenPDFMember exposes the matching replica as its sole member.
+        predictions = central_predictions(dataset, frozen_pdf)
+        cuts = dataset.cuts.load()
+        values = predictions.loc[cuts].to_numpy().reshape(-1)
+    else:
+        return None
+    expected = dataset.commondata.ndata if dataset.cuts is None else len(dataset.cuts.load())
+    if values.shape != (expected,) or not np.isfinite(values).all():
+        raise ValueError(f"{dataset.name}: fixed predictions must contain {expected} finite values")
+    return values
 
 
 def _fixed_prediction_fkdata(fixed_predictions, hadronic):
@@ -194,20 +214,22 @@ def dataset_t0_predictions(t0dataset, t0set):
         ) from e
 
 
-def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=None):
-    """Note: for anayltic solution the data must be grouped together (default in simunet: ALL)."""
-    """Note: for anayltic solution the data must be grouped together (default in simunet: ALL).
+def fittable_datasets_masked(data, simu_layer=None, simu_parameters_analytic=None, frozen_pdf=None):
+    """
+    Produce a list of fittable datasets, with fixed predictions if requested.
+    Note: for analyltic solution the data must be grouped together (default in simunet: ALL).
+    Note: for anayltic solution the data must be grouped together (default in simunet: ALL).
     ``simu_parameters_analytic`` is just the raw ``simu_parameters`` namespace
     when ``analytic_initialisation`` is not active
     """
 
     ret = vanilla_fittable_datasets_masked(data)
     for dataset, fittable_dataset in zip(data.datasets, ret):
-        if getattr(dataset, "use_fixed_predictions", False):
-            fixed_predictions = np.take(dataset.fixed_predictions, dataset.cuts.load())
-            # In normal NNPDF, whether a dataset is DIS or hadronic is given by the fktable
+        fixed_predictions = fixed_dataset_predictions(dataset, frozen_pdf)
+        if fixed_predictions is not None:
             hadronic = not str(dataset.commondata.process_type).startswith("DIS")
             fittable_dataset.fktables_data = [_fixed_prediction_fkdata(fixed_predictions, hadronic)]
+            fittable_dataset.operation = "NULL"
 
     if simu_layer is None:
         return ret

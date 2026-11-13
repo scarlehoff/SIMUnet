@@ -122,3 +122,22 @@ Please consider citing these papers if you use the code.
 ## Bugs and contributions
 
 If you find a bug or have a new feature idea, do not hesitate to drop them in our [issue tracker](https://github.com/HEP-PBSP/SIMUnet/issues).
+
+
+### Fitting BSM coefficients with a frozen LHAPDF
+
+To use an LHAPDF set without its neural network weights, configure:
+
+```yaml
+freeze_pdf: true
+frozen_pdf: NNPDF40_nnlo_as_01180
+```
+
+Together with `simu_parameters`, this computes the Standard Model predictions
+once before training. Fit replica `r` uses LHAPDF member `r`. The LHAPDF set must be Monte
+Carlo (`ErrorType: replicas`), and the matching member must be present in both
+the set metadata and the installed grid files. Missing members and Hessian sets
+are rejected without substituting another member.
+The usual dataset cuts, theory correction factors and FK table operations are
+applied by Validphys. Only the BSM correction is fitted. Datasets with
+`use_fixed_predictions: true` continue to use their stored `SM_fixed` baseline.
