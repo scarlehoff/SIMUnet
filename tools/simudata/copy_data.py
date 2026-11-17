@@ -1,14 +1,19 @@
+"""
+This script copies SIMU factor files from the source directory into the simunet package's data directory based on a mapping provided in `data_maps.csv`. 
+It checks for the existence of the source files and only copies those that are valid according to specified criteria. Any skipped entries are recorded in `data_maps2.csv`.
+"""
 import os
 import shutil
 import csv
+from pathlib import Path
 
 # Paths
 simu_factors_dir = os.path.expanduser(
     "~/miniconda3/envs/simunet_mac/share/NNPDF/data/theory_270/simu_factors"
 )
-target_dir = "/Users/ellacole/codes/simunet/simunet_nnpdf/simudata/simu_factors"
-csv_file_path = "/Users/ellacole/codes/simunet/simunet_nnpdf/simudata/data_maps.csv"
-output_csv = "/Users/ellacole/codes/simunet/simunet_nnpdf/simudata/data_maps2.csv"
+target_dir = Path(__file__).resolve().parents[2] / "src/simunet/simudata/simu_factors"
+csv_file_path = Path(__file__).with_name("data_maps.csv")
+output_csv = Path(__file__).with_name("data_maps2.csv")
 
 
 def read_csv(path):
