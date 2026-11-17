@@ -17,6 +17,8 @@ dataset_inputs:
 
 diagonal_basis: False
 freeze_pdf: True
+# To freeze the matching LHAPDF replica instead, replace load_weights_from_fit with:
+# frozen_pdf: NNPDF40_nnlo_as_01180
 # TODO: at the moment the weights have to be downloaded manually
 load_weights_from_fit: 260619_try_get_older_nnpdf40_reference
 
