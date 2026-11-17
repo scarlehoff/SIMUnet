@@ -1,4 +1,4 @@
-name: SIMU factors to POPxf regression
+name: SIMUnet tests
 
 on:
   push:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: popxf-${{ github.workflow }}-${{ github.ref }}
+  group: simunet-tests-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -54,4 +54,37 @@ jobs:
         with:
           name: popxf-test-results
           path: popxf-results.xml
+          if-no-files-found: ignore
+
+  smeft-coverage:
+    name: SMEFT parameter coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      PYTHONHASHSEED: "0"
+      MPLBACKEND: Agg
+      BROWSER: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: popxf-regression
+          environment-file: tests/ci/popxf-environment.yml
+          miniforge-version: latest
+          auto-activate-base: false
+      - name: Install pinned regression dependencies and this checkout
+        run: |
+          python -m pip install -r tests/ci/popxf-requirements.txt
+          python -m pip install -e ".[tests]"
+      - name: Test setupfit SMEFT parameter coverage
+        run: python -m pytest tests/test_setupfit_simu_coverage.py -v --junitxml=setupfit-coverage-results.xml
+      - name: Keep test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smeft-coverage-test-results
+          path: setupfit-coverage-results.xml
           if-no-files-found: ignore
